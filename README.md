@@ -1,4 +1,5 @@
 # td-bot
+## Not yet usable or tested.
 ## A framework for implementing strategies using TD Ameritrade's API.
 This code makes heavy use of [tda-api](https://github.com/alexgolec/tda-api). Thanks to author Alex Golec and other contributors.
 
