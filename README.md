@@ -11,3 +11,6 @@ account_number = "xxx"
 account_password = "xxx"  
 client_id = "xxx" 
 ```
+
+### -------------------------------------------
+`ema.py` contains simple and useful code for calculating an exponential moving average.
