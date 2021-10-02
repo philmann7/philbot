@@ -1,5 +1,6 @@
 # td-bot
 ## A framework for implementing strategies using TD Ameritrade's API.
+This code makes heavy use of [tda-api](https://github.com/alexgolec/tda-api). Thanks to Alex Golec and other contributors.
 
 ### Use info
 Sensitive account info should be stored in a .env file in the root directory. The program will also generate a token.json in the root directory. Both of these should be git ignored.
