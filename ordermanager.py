@@ -45,8 +45,8 @@ class OrderManager:
     def update(self, symbol, signal, newprice):
     """
     update parameter is the output of
-    signaler.update if it didn't return 0.
-    so update should be Signals.something
+    signaler.update so update should be Signals.something
+    or 0
     """
         pass
 
