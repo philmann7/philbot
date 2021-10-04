@@ -4,6 +4,7 @@
 # https://tda-api.readthedocs.io/en/latest/client.html#orders
 from signaler import Signals
 from ema import CloudColor, CloudPriceLocation
+from botutils import getStdDevForSymbol
 
 from enum import Enum
 
@@ -86,6 +87,7 @@ class Position:
         pass
 
     def updatePosition():
+        # be sure to update stop with new ema or new ema+offset or whatever
         pass
 
 
@@ -96,7 +98,7 @@ class OrderManager:
         self.config = config  # class OrderManagerConfig
         self.currentpositions = {}  # symbol:Position
 
-    def update(self, symbol, signal, newprice):
+    def update(self, client, symbol, signal, newprice):
         """
         update parameter is the output of
         signaler.update so update should be Signals.something
@@ -108,7 +110,7 @@ class OrderManager:
         elif symbol in self.currentpositions:
             self.currentpositions[symbol].updatePosition(signal, newprice)
         elif signal and signal != Signals.CLOSE:
-            self.currentpositions[symbol] = self.positionFromSignal(symbol, signal)
+            self.currentpositions[symbol] = self.openPositionFromSignal(symbol, signal, client, cloud)
 
     def updateFromAccountActivity():
         """
@@ -123,8 +125,8 @@ class OrderManager:
         """
         pass
 
-    def open():
-        pass
+    def open(self, symbol, contract, limit, takeprofit, stop, opened_on_signal,):
+        newposition = Position(contract, limit, takeprofit, stop, opened_on_signal)
 
     def close():
         pass
@@ -132,5 +134,8 @@ class OrderManager:
     def increase():
         pass
 
-    def positionFromSignal():
-        pass
+    def openPositionFromSignal(self, symbol, signal, client, cloud,):
+        period = 50
+        standard_dev = getStdDevForSymbol(client, symbol, period)
+        stop, takeprofit = levelSet(price, standard_dev, cloud)
+        self.open(symbol, contract, limit, takeprofit, stop, signal,)
