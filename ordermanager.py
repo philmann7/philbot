@@ -85,10 +85,7 @@ class Position:
     def increase():
         pass
 
-    def handleSignal():
-        pass
-
-    def handleNewPrice():
+    def updatePosition():
         pass
 
 
@@ -105,10 +102,13 @@ class OrderManager:
         signaler.update so update should be Signals.something
         or 0
         """
-        if signal and symbol in self.currentpositions:
-            self.currentpositions[symbol].handleSignal(signal, newprice)
+        # this will be a cloud color change
+        if signal == Signals.CLOSE and symbol in self.currentpositions:
+            self.currentpositions[symbol].close()
         elif symbol in self.currentpositions:
-            self.currentpositions[symbol].handleNewPrice(newprice)
+            self.currentpositions[symbol].updatePosition(signal, newprice)
+        elif signal and signal != Signals.CLOSE:
+            self.currentpositions[symbol] = self.positionFromSignal(symbol, signal)
 
     def updateFromAccountActivity():
         """
@@ -130,4 +130,7 @@ class OrderManager:
         pass
 
     def increase():
+        pass
+
+    def positionFromSignal():
         pass
