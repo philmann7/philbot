@@ -9,8 +9,7 @@ from enum import Enum
 
 
 class PositionState(Enum):
-    OPEN = 1
-    TRAIL_STOP = 2
+    OPEN, TRAIL_STOP = range(2)
 
 def levelSet(currentprice, standard_deviation, cloud,):
     """
@@ -59,15 +58,15 @@ class OrderManagerConfig:
 
 
 class Position:
-    def __init__(self, contract):
+    def __init__(self, contract, limit, takeprofit, stop, opened_on):
         self.contract = contract  # contract symbol
+        self.opened_on = opened_on # signaler.Signals.OPEN or OPEN_OR_INCREASE
         self.netpos = 0
         self.associated_orders = {}  # id:status
 
-        se
-        f.state = None  # PositionState
-        self.stop = None
-        self.takeprofit = []
+        self.state = None  # PositionState
+        self.stop = stop
+        self.takeprofit = takeprofit
 
     # possibly move these into order manager
     def open():
