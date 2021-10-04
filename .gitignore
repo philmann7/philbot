@@ -1,5 +1,5 @@
 .env
-.swp
+*.swp
 test.py
 .swo
 token.json

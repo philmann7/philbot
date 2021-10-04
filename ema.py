@@ -9,6 +9,7 @@ def expMovAvg(input_list, period, k=0):
     # the most recent period values are most heavily weighted
     # see:
     # https://tlc.thinkorswim.com/center/reference/thinkScript/Functions/Tech-Analysis/ExpAverage
+    # i think thinkorswim typically uses data from beginning of day (for 1 minute chart)
 
     if len(input_list) == 1:
         return input_list.pop()
