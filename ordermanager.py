@@ -7,8 +7,8 @@ from enum import Enum
 
 
 class PositionState(Enum):
-    OPEN = auto()
-    TRAIL_STOP = auto()
+    OPEN = 1
+    TRAIL_STOP = 2
 
 
 class OrderManagerConfig:
@@ -18,11 +18,12 @@ class OrderManagerConfig:
 
 class Position:
     def __init__(self, contract):
-        self.contract = contract # contract symbol
+        self.contract = contract  # contract symbol
         self.netpos = 0
-        self.associated_orders = {} # id:status
+        self.associated_orders = {}  # id:status
 
-        se;f.state = None # PositionState
+        se
+        f.state = None  # PositionState
         self.stop = None
         self.takeprofit = []
 
@@ -38,22 +39,24 @@ class Position:
 
 
 class OrderManager:
-    def __init__(self, config,):
-        self.config = config # class OrderManagerConfig
-        self.currentpositions = {} # symbol:Position
+    def __init__(
+        self, config,
+    ):
+        self.config = config  # class OrderManagerConfig
+        self.currentpositions = {}  # symbol:Position
 
     def update(self, symbol, signal, newprice):
-    """
-    update parameter is the output of
-    signaler.update so update should be Signals.something
-    or 0
-    """
+        """
+        update parameter is the output of
+        signaler.update so update should be Signals.something
+        or 0
+        """
         pass
 
     def getContractFromChain():
-    """
-    returns an appropriate options contract symbol
-    """
+        """
+        returns an appropriate options contract symbol
+        """
         pass
 
     def open():
@@ -64,4 +67,3 @@ class OrderManager:
 
     def increase():
         pass
-

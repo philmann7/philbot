@@ -14,8 +14,10 @@ class Signals(Enum):
 
 
 class Signaler:
-    def __init__(self, client, symbol):
-        history = await gethistory(client, symbol)
+    def __init__(
+        self, client, symbol, history,
+    ):
+        history = history
         closevals = [candle["close"] for candle in history]
 
         shortEMA = expMovAvg(closevals.copy(), 9)
@@ -27,21 +29,20 @@ class Signaler:
         self.symbol = symbol
         self.cloud = Cloud(shortEMA, longEMA, currentprice)
 
-
     def updateCloud(self, service, newprice):
-    """
-    Update EMAs and cloud based on new data.
-    Called by update and passes 0 if cloud status is
-    unchanged and (oldstatus, newstatus) otherwise
+        """
+        Update EMAs and cloud based on new data.
+        Called by update and passes 0 if cloud status is
+        unchanged and (oldstatus, newstatus) otherwise
 
-    A lot of this could likely be moved inside the
-    cloud class.
-    """
+        A lot of this could likely be moved inside the
+        cloud class.
+        """
         status = self.cloud.status
         self.cloud.shortEMA = expMovAvg([self.historical["short"], newprice])
         self.cloud.longEMA = expMovAvg([self.historical["long"], newprice])
 
-        if service == 'CHART_EQUITY'
+        if service == "CHART_EQUITY":
             self.historical["short"] = self.cloud.shortEMA
             self.historical["long"] = self.cloud.longEMA
 
@@ -53,31 +54,29 @@ class Signaler:
         else:
             return 0
 
-
     def update(self, service, data):
-    """
-    This updates the cloud values based on new data.
-    Takes data from msghandler as input.
-    Returns 0 if no change in cloud status
-    or (oldstatus, newstatus) otherwise.
-    Also returns the most recent price.
-    to be passed to cloudStatusToSignal
-    """
+        """
+        This updates the cloud values based on new data.
+        Takes data from msghandler as input.
+        Returns 0 if no change in cloud status
+        or (oldstatus, newstatus) otherwise.
+        Also returns the most recent price.
+        to be passed to cloudStatusToSignal
+        """
         if service == "QUOTE":
             newprice = data["LAST_PRICE"]
         if service == "CHART_EQUITY":
             newprice = data["CLOSE_PRICE"]
         return self.updateCloud(newprice), newprice
 
-
     def cloudStatusToSignal(status, newstatus):
-    """
-    Input should come from the update function
-    Takes a change of status (oldstatus, newstatus)
-    and returns a signal from the Signal enum.
-    Returns Signals.EXIT in event of cloud color change
-    or in case of any undefined changes.
-    """
+        """
+        Input should come from the update function
+        Takes a change of status (oldstatus, newstatus)
+        and returns a signal from the Signal enum.
+        Returns Signals.EXIT in event of cloud color change
+        or in case of any undefined changes.
+        """
         color, location = status
         newcolor, newlocation = newstatus
 

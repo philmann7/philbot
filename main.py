@@ -21,6 +21,7 @@ client = easy_client(
 )
 stream_client = StreamClient(client, account_id=int(os.getenv("account_number")))
 
+
 async def message_handling(msg, signaler, msghandler, ordmngr):
     # newdatafor in the form of [(symbol, service),...]
     newdatafor = await msghandler.handle(msg)
@@ -30,12 +31,11 @@ async def message_handling(msg, signaler, msghandler, ordmngr):
         (symbol, signaler.update(service, msghandler.last_messages[service][symbol]))
         for (symbol, service) in newdatafor
         # for signaler in signalers if signaler.symbol == symbol
-        ]
+    ]
     ordermngupdate = [
-            ordmngr.update(symbol, signal, newprice)
-            for (symbol, (signal, newprice)) in updates
-            ]
-
+        ordmngr.update(symbol, signal, newprice)
+        for (symbol, (signal, newprice)) in updates
+    ]
 
 
 async def read_stream(msghandler, signaler, ordmngr):
