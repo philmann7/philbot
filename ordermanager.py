@@ -110,7 +110,9 @@ class OrderManager:
         elif symbol in self.currentpositions:
             self.currentpositions[symbol].updatePosition(signal, newprice)
         elif signal and signal != Signals.CLOSE:
-            self.currentpositions[symbol] = self.openPositionFromSignal(symbol, signal, client, cloud)
+            self.currentpositions[symbol] = self.openPositionFromSignal(
+                symbol, signal, client, cloud
+            )
 
     def updateFromAccountActivity():
         """
@@ -125,7 +127,9 @@ class OrderManager:
         """
         pass
 
-    def open(self, symbol, contract, limit, takeprofit, stop, opened_on_signal,):
+    def open(
+        self, symbol, contract, limit, takeprofit, stop, opened_on_signal,
+    ):
         newposition = Position(contract, limit, takeprofit, stop, opened_on_signal)
 
     def close():
@@ -134,8 +138,12 @@ class OrderManager:
     def increase():
         pass
 
-    def openPositionFromSignal(self, symbol, signal, client, cloud,):
+    def openPositionFromSignal(
+        self, symbol, signal, client, cloud,
+    ):
         period = 50
         standard_dev = getStdDevForSymbol(client, symbol, period)
         stop, takeprofit = levelSet(price, standard_dev, cloud)
-        self.open(symbol, contract, limit, takeprofit, stop, signal,)
+        self.open(
+            symbol, contract, limit, takeprofit, stop, signal,
+        )
