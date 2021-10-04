@@ -10,6 +10,13 @@ class PositionState(Enum):
     OPEN = 1
     TRAIL_STOP = 2
 
+class LevelSetter:
+    """
+    calculates risk and reward levels.
+    should return a stop loss and a list
+    of take profit levels
+    """
+    pass
 
 class OrderManagerConfig:
     def __init__(self,):
