@@ -62,13 +62,14 @@ async def flatten(chain):
     """
 
     flattened = []
-    for key in ['callExpDateMap', 'putExpDateMap']:
+    for key in ["callExpDateMap", "putExpDateMap"]:
         for date in chain[key]:
             for strike in chain[key][date]:
                 for contract in chain[key][date][strike]:
                     flattened.append(contract)
 
     return flattened
+
 
 async def getFlattenedChain(
     client, symbol, strike_count, dte,
