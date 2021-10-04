@@ -11,7 +11,10 @@ from enum import Enum
 class PositionState(Enum):
     OPEN, TRAIL_STOP = range(2)
 
-def levelSet(currentprice, standard_deviation, cloud,):
+
+def levelSet(
+    currentprice, standard_deviation, cloud,
+):
     """
     calculates risk and reward levels.
     should return a stop loss and take profit levels
@@ -25,7 +28,6 @@ def levelSet(currentprice, standard_deviation, cloud,):
     stopmod = 1
     takeprofitmod = 2
 
-
     directionmod = 1
     if cloudcolor == CloudColor.RED:
         directionmod = -1
@@ -38,19 +40,22 @@ def levelSet(currentprice, standard_deviation, cloud,):
     if cloudlocation == CloudPriceLocation.INSIDE:
         stop = cloud.longEMA - (standard_deviation * stopmod)
 
-    if cloudlocation == CloudPriceLocation.ABOVE or cloudlocation == CloudPriceLocation.BELOW:
-        stop = min(
-            cloud.longEMA,
-            currentprice - (directionmod * standard_deviation)
-        )
+    if (
+        cloudlocation == CloudPriceLocation.ABOVE
+        or cloudlocation == CloudPriceLocation.BELOW
+    ):
+        stop = min(cloud.longEMA, currentprice - (directionmod * standard_deviation))
 
     return stop, takeprofit
+
 
 class LevelSetter:
     """
     holds levelsetter settings
     """
+
     pass
+
 
 class OrderManagerConfig:
     def __init__(self,):
@@ -60,7 +65,7 @@ class OrderManagerConfig:
 class Position:
     def __init__(self, contract, limit, takeprofit, stop, opened_on):
         self.contract = contract  # contract symbol
-        self.opened_on = opened_on # signaler.Signals.OPEN or OPEN_OR_INCREASE
+        self.opened_on = opened_on  # signaler.Signals.OPEN or OPEN_OR_INCREASE
         self.netpos = 0
         self.associated_orders = {}  # id:status
 

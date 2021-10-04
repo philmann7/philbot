@@ -29,13 +29,15 @@ async def gethistory(client, symbol):
 
     return history["candles"]
 
-async def getStdDev(candles, period, values='close'):
+
+async def getStdDev(candles, period, values="close"):
     """
     takes input of gethistory.
     uses close vals by default
     returns standard deviation of the period
     """
     return stdev([candle[values] for candle in candles[-period:]])
+
 
 async def getStdDevForSymbol(client, symbol, period):
     """
@@ -44,6 +46,7 @@ async def getStdDevForSymbol(client, symbol, period):
     history = await gethistory(client, symbol)
     standard_deviation = await getStdDev(history, period)
     return standard_deviation
+
 
 async def getOptionChain(
     client, symbol, strike_count, dte,
