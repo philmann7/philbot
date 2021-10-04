@@ -36,6 +36,7 @@ async def message_handling(msg, signaler, msghandler, ordmngr):
         ordmngr.update(symbol, signal, newprice)
         for (symbol, (signal, newprice)) in updates
     ]
+    print(signaler)
 
 
 async def read_stream(msghandler, signaler, ordmngr):
@@ -45,12 +46,12 @@ async def read_stream(msghandler, signaler, ordmngr):
     # Always add handlers before subscribing because many streams start sending
     # data immediately after success, and messages with no handlers are dropped.
     stream_client.add_chart_equity_handler(
-        lambda msg: message_handling(msg, signaler, msghandler)
+        lambda msg: message_handling(msg, signaler, msghandler, ordmngr)
     )
     await stream_client.chart_equity_subs(["SPY"])
 
     stream_client.add_level_one_equity_handler(
-        lambda msg: message_handling(msg, signaler, msghandler)
+        lambda msg: message_handling(msg, signaler, msghandler, ordmngr)
     )
     await stream_client.level_one_equity_subs(["AAPL"])
 

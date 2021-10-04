@@ -3,12 +3,49 @@
 # moves stoploss to take profits
 # https://tda-api.readthedocs.io/en/latest/client.html#orders
 from signaler import Signals
+from ema import CloudColor, CloudPriceLocation
+
 from enum import Enum
 
 
 class PositionState(Enum):
     OPEN = 1
     TRAIL_STOP = 2
+
+def levelSet(currentprice, standard_deviation, cloud,):
+    """
+    calculates risk and reward levels.
+    should return a stop loss and take profit levels
+    for opening a new position
+    """
+    stop = None
+    takeprofit = None
+    cloudcolor = cloud.status[0]
+    cloudlocation = cloud.status[1]
+
+    stopmod = 1
+    takeprofitmod = 2
+
+
+    directionmod = 1
+    if cloudcolor == CloudColor.RED:
+        directionmod = -1
+
+    takeprofitmod = takeprofitmod * directionmod
+    stopmod = stopmod * directionmod
+
+    takeprofit = cloud.shortEMA + (standard_deviation * takeprofitmod)
+
+    if cloudlocation == CloudPriceLocation.INSIDE:
+        stop = cloud.longEMA - (standard_deviation * stopmod)
+
+    if cloudlocation == CloudPriceLocation.ABOVE or cloudlocation == CloudPriceLocation.BELOW:
+        stop = min(
+            cloud.longEMA,
+            currentprice - (directionmod * standard_deviation)
+        )
+
+    return stop, takeprofit
 
 class LevelSetter:
     """
