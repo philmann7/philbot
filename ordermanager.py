@@ -49,9 +49,7 @@ def levelSet(currentprice, standard_deviation, cloud,):
 
 class LevelSetter:
     """
-    calculates risk and reward levels.
-    should return a stop loss and a list
-    of take profit levels
+    holds levelsetter settings
     """
     pass
 
