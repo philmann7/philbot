@@ -66,6 +66,8 @@ class Position:
     def __init__(self, contract, limit, takeprofit, stop, opened_on):
         self.contract = contract  # contract symbol
         self.opened_on = opened_on  # signaler.Signals.OPEN or OPEN_OR_INCREASE
+        # if opened on OPEN_OR_INCREASE only allow position size 1
+
         self.netpos = 0
         self.associated_orders = {}  # id:status
 
@@ -83,6 +85,12 @@ class Position:
     def increase():
         pass
 
+    def handleSignal():
+        pass
+
+    def handleNewPrice():
+        pass
+
 
 class OrderManager:
     def __init__(
@@ -96,6 +104,16 @@ class OrderManager:
         update parameter is the output of
         signaler.update so update should be Signals.something
         or 0
+        """
+        if signal and symbol in self.currentpositions:
+            self.currentpositions[symbol].handleSignal(signal, newprice)
+        elif symbol in self.currentpositions:
+            self.currentpositions[symbol].handleNewPrice(newprice)
+
+    def updateFromAccountActivity():
+        """
+        handles new messages from the account activity stream
+        like order fills or cancels
         """
         pass
 
