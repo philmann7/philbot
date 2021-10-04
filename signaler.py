@@ -1,3 +1,8 @@
+# puts out buy (open) signals
+# except for cloud color change
+# take profits and stop losses will
+# be calculated elsewhere
+
 from enum import Enum
 import asyncio
 
@@ -6,11 +11,7 @@ from botutils import gethistory
 
 
 class Signals(Enum):
-    BUY_TO_OPEN = "BUY_TO_OPEN"
-    BUY_TO_CLOSE = "BUY_TO_CLOSE"
-    SELL_TO_OPEN = "SELL_TO_OPEN"
-    SELL_TO_CLOSE = "SELL_TO_CLOSE"
-    EXIT = "EXIT"
+    OPEN, OPEN_OR_INCREASE, CLOSE = range(3)
 
 
 class Signaler:
@@ -73,16 +74,15 @@ class Signaler:
         """
         Input should come from the update function
         Takes a change of status (oldstatus, newstatus)
-        and returns a signal from the Signal enum.
-        Returns Signals.EXIT in event of cloud color change
-        or in case of any undefined changes.
+        and returns a signal from the Signal enum or 0.
+        Returns Signals.CLOSE in event of cloud color change
         """
         color, location = status
         newcolor, newlocation = newstatus
 
         if color != newcolor:
             # exit any entered position on color change
-            return Signals.EXIT
+            return Signals.CLOSE
 
         if color == CloudColor.GREEN:
             # bullish moves up
@@ -90,12 +90,12 @@ class Signaler:
                 location == CloudPriceLocation.BELOW
                 and newlocation == CloudPriceLocation.INSIDE
             ):
-                return Signals.BUY_TO_OPEN
+                return Signals.OPEN
             if (
                 location == CloudPriceLocation.INSIDE
                 and newlocation == CloudPriceLocation.ABOVE
             ):
-                return Signals.BUY_TO_OPEN
+                return Signals.OPEN_OR_INCREASE
 
             # bearish moves down
             if (
@@ -107,7 +107,7 @@ class Signaler:
                 location == CloudPriceLocation.INSIDE
                 and newlocation == CloudPriceLocation.BELOW
             ):
-                return Signals.SELL_TO_CLOSE
+                return 0
 
         if color == CloudColor.RED:
             # bullish moves up
@@ -120,19 +120,19 @@ class Signaler:
                 location == CloudPriceLocation.INSIDE
                 and newlocation == CloudPriceLocation.ABOVE
             ):
-                return Signals.BUY_TO_CLOSE
+                return 0
 
             # bearish moves down
             if (
                 location == CloudPriceLocation.ABOVE
                 and newlocation == CloudPriceLocation.INSIDE
             ):
-                return Signals.SELL_TO_OPEN
+                return Signals.OPEN
             if (
                 location == CloudPriceLocation.INSIDE
                 and newlocation == CloudPriceLocation.BELOW
             ):
-                return Signals.SELL_TO_OPEN
+                return Signals.OPEN_OR_INCREASE
 
         # in case of confusion
-        return Signals.EXIT
+        return 0
