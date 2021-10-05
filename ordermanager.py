@@ -4,7 +4,7 @@
 # https://tda-api.readthedocs.io/en/latest/client.html#orders
 from signaler import Signals
 from ema import CloudColor, CloudPriceLocation
-from botutils import getStdDevForSymbol
+from botutils import getStdDevForSymbol, getFlattenedChain
 
 from enum import Enum
 
@@ -13,6 +13,7 @@ class PositionState(Enum):
     OPEN, TRAIL_STOP = range(2)
 
 
+# possibly turn this into class to store values like multipliers
 def levelSet(
     currentprice, standard_deviation, cloud,
 ):
@@ -26,7 +27,7 @@ def levelSet(
     cloudcolor = cloud.status[0]
     cloudlocation = cloud.status[1]
 
-    stopmod = 1
+    stopmod = 1  # number of std devs
     takeprofitmod = 2
 
     directionmod = 1
@@ -36,8 +37,6 @@ def levelSet(
     takeprofitmod = takeprofitmod * directionmod
     stopmod = stopmod * directionmod
 
-    takeprofit = cloud.shortEMA + (standard_deviation * takeprofitmod)
-
     if cloudlocation == CloudPriceLocation.INSIDE:
         stop = cloud.longEMA - (standard_deviation * stopmod)
 
@@ -45,7 +44,15 @@ def levelSet(
         cloudlocation == CloudPriceLocation.ABOVE
         or cloudlocation == CloudPriceLocation.BELOW
     ):
-        stop = min(cloud.longEMA, currentprice - (directionmod * standard_deviation))
+        # this is in case the long EMA is very far away
+        stop = min(
+            cloud.longEMA, cloud.shortEMA - (directionmod * 2 * standard_deviation)
+        )
+
+    takeprofit = max(
+        cloud.shortEMA + (standard_deviation * takeprofitmod),
+        2 * abs(currentprice - stop),
+    )
 
     return stop, takeprofit
 
@@ -59,8 +66,14 @@ class LevelSetter:
 
 
 class OrderManagerConfig:
-    def __init__(self,):
-        pass
+    def __init__(
+        self, stdev_period, mindte, maxdte,
+    ):
+        self.stdev_period = (
+            stdev_period  # period of calculation of the standard deviation
+        )
+        self.mindte = mindte  # days to expiration on the options contracts
+        self.maxdte = maxdte
 
 
 class Position:
@@ -77,7 +90,9 @@ class Position:
         self.takeprofit = takeprofit
 
     # possibly move these into order manager
-    def open():
+    def open(
+        self, client,
+    ):
         pass
 
     def close():
@@ -124,13 +139,17 @@ class OrderManager:
     def getContractFromChain():
         """
         returns an appropriate options contract symbol
+        should validate risk/reward with the philrate
         """
-        pass
+        contracts = getFlattenedChain(client, symbol, strike_count, dte)
 
     def open(
         self, symbol, contract, limit, takeprofit, stop, opened_on_signal,
     ):
-        newposition = Position(contract, limit, takeprofit, stop, opened_on_signal)
+        self.currentpositions[symbol] = Position(
+            contract, limit, takeprofit, stop, opened_on_signal
+        )
+        self.currentpositions[symbol].open()
 
     def close():
         pass
@@ -139,11 +158,16 @@ class OrderManager:
         pass
 
     def openPositionFromSignal(
-        self, symbol, signal, client, cloud,
+        self, symbol, signal, client, cloud, price,
     ):
         period = 50
         standard_dev = getStdDevForSymbol(client, symbol, period)
+
         stop, takeprofit = levelSet(price, standard_dev, cloud)
+
+        contract = getContractFromChain(symbol, price, stop, takeprofit, standard_dev,)
+        limit = None
+
         self.open(
             symbol, contract, limit, takeprofit, stop, signal,
         )
