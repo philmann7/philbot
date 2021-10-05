@@ -25,6 +25,13 @@ stream_client = StreamClient(client, account_id=int(os.getenv("account_number"))
 async def message_handling(msg, signaler, msghandler, ordmngr):
     # newdatafor in the form of [(symbol, service),...]
     newdatafor = await msghandler.handle(msg)
+
+    if newdatafor[0][1] == "ACCOUNT_ACTIVITY":
+        return [
+            ordmngr.updateFromAccountActivity(content)
+            for (content, service) in newdatafor
+        ]
+
     # the way signaler is currently written it should be only for one symbol
     # so multiple symbols will break this
     updates = [
@@ -54,6 +61,11 @@ async def read_stream(msghandler, signaler, ordmngr):
         lambda msg: message_handling(msg, signaler, msghandler, ordmngr)
     )
     await stream_client.level_one_equity_subs(["AAPL"])
+
+    stream_client.add_account_activity_handler(
+        lambda msg: message_handling(msg, signaler, msghandler, ordmngr)
+    )
+    await stream_client.account_activity_subs()
 
     while True:
         await stream_client.handle_message()
