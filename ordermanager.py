@@ -76,6 +76,8 @@ class OrderManagerConfig:
         max_spread,
         max_loss,
         min_risk_reward_ratio,
+        strike_count,
+        limit_padding,
     ):
         self.stdev_period = (
             stdev_period  # period of calculation of the standard deviation
@@ -87,6 +89,9 @@ class OrderManagerConfig:
         self.max_spread = max_spread  # bid/ask spread
         self.max_loss = max_loss  # on price of contract so use option pricing convention ie .10 for 10 dollars
         self.min_risk_reward_ratio = min_risk_reward_ratio  # profit/loss expected_move_to_profit/expected_move_to_stop
+        self.strike_count = strike_count  # number of strikes to ask the API for
+        self.limit_padding = limit_padding  # if set to 0.01 the limit buy will
+        # be set at ask+.01
 
 
 class Position:
@@ -149,14 +154,18 @@ class OrderManager:
         """
         pass
 
-    def getContractFromChain():
+    def getContractFromChain(
+        self, client, symbol, take_profit, stop, currentprice,
+    ):
         """
         returns an appropriate options contract symbol
         should validate risk/reward with the philrate
         """
         expected_move_to_profit = abs(take_profit - currentprice)
         expected_move_to_stop = abs(stop - currentprice)
-        contracts = getFlattenedChain(client, symbol, strike_count, dte)
+        contracts = getFlattenedChain(
+            client, symbol, self.config.strike_count, self.config.maxdte + 1,
+        )
         # contract validation
         contracts = [
             contract
@@ -174,6 +183,12 @@ class OrderManager:
             for contract in contracts
             if abs(contract["delta"]) * expected_move_to_stop < self.config.max_loss
         ]
+
+        # there can only be one
+        highest_delta_contract = sorted(
+            contracts, key=lambda contract: abs(contract["delta"])
+        )
+        return highest_delta_contract
 
     def open(
         self, symbol, contract, limit, takeprofit, stop, opened_on_signal,
@@ -198,7 +213,7 @@ class OrderManager:
         stop, takeprofit = levelSet(price, standard_dev, cloud)
 
         contract = getContractFromChain(symbol, price, stop, takeprofit, standard_dev,)
-        limit = None
+        limit = contract["ask"] + self.config.limit_padding
 
         self.open(
             symbol, contract, limit, takeprofit, stop, signal,
