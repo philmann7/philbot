@@ -67,13 +67,22 @@ class LevelSetter:
 
 class OrderManagerConfig:
     def __init__(
-        self, stdev_period, mindte, maxdte,
+        self,
+        stdev_period,
+        mindte,
+        maxdte,
+        max_contract_price,
+        min_contract_price,
+        max_spread,
     ):
         self.stdev_period = (
             stdev_period  # period of calculation of the standard deviation
         )
         self.mindte = mindte  # days to expiration on the options contracts
         self.maxdte = maxdte
+        self.max_contract_price = max_contract_price
+        self.min_contract_price = min_contract_price
+        self.max_spread = max_spread  # bid/ask spread
 
 
 class Position:
@@ -142,6 +151,18 @@ class OrderManager:
         should validate risk/reward with the philrate
         """
         contracts = getFlattenedChain(client, symbol, strike_count, dte)
+        # contract validation
+        contracts = [
+            contract
+            for contract in contracts
+            if contract["ask"] - contract["bid"] <= self.config.max_spread
+            and contract["daysToExpiration"] >= mindte
+            and contract["daysToExpiration"] <= maxdte
+            and contract["ask"] > self.config.min_contract_price
+            and contract["ask"] < self.config.max_contract_price
+        ]
+
+        # risk reward validation
 
     def open(
         self, symbol, contract, limit, takeprofit, stop, opened_on_signal,
