@@ -74,6 +74,8 @@ class OrderManagerConfig:
         max_contract_price,
         min_contract_price,
         max_spread,
+        max_loss,
+        min_risk_reward_ratio,
     ):
         self.stdev_period = (
             stdev_period  # period of calculation of the standard deviation
@@ -83,6 +85,8 @@ class OrderManagerConfig:
         self.max_contract_price = max_contract_price
         self.min_contract_price = min_contract_price
         self.max_spread = max_spread  # bid/ask spread
+        self.max_loss = max_loss  # on price of contract so use option pricing convention ie .10 for 10 dollars
+        self.min_risk_reward_ratio = min_risk_reward_ratio  # profit/loss expected_move_to_profit/expected_move_to_stop
 
 
 class Position:
@@ -150,6 +154,8 @@ class OrderManager:
         returns an appropriate options contract symbol
         should validate risk/reward with the philrate
         """
+        expected_move_to_profit = abs(take_profit - currentprice)
+        expected_move_to_stop = abs(stop - currentprice)
         contracts = getFlattenedChain(client, symbol, strike_count, dte)
         # contract validation
         contracts = [
@@ -163,6 +169,11 @@ class OrderManager:
         ]
 
         # risk reward validation
+        contracts = [
+            contract
+            for contract in contracts
+            if abs(contract["delta"]) * expected_move_to_stop < self.config.max_loss
+        ]
 
     def open(
         self, symbol, contract, limit, takeprofit, stop, opened_on_signal,
