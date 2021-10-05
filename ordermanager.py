@@ -155,12 +155,18 @@ class OrderManager:
         pass
 
     def getContractFromChain(
-        self, client, symbol, take_profit, stop, currentprice,
+        self, client, symbol, take_profit, stop, currentprice, cloudcolor
     ):
         """
         returns an appropriate options contract symbol
         should validate risk/reward with the philrate
         """
+        putCall = None
+        if cloudcolor == CloudColor.GREEN:
+            putCall = "CALL"
+        elif cloudcolor == CloudColor.RED:
+            putCall = "PUT"
+
         expected_move_to_profit = abs(take_profit - currentprice)
         expected_move_to_stop = abs(stop - currentprice)
         contracts = getFlattenedChain(
@@ -171,6 +177,7 @@ class OrderManager:
             contract
             for contract in contracts
             if contract["ask"] - contract["bid"] <= self.config.max_spread
+            and contract["putCall"] == putorcall
             and contract["daysToExpiration"] >= mindte
             and contract["daysToExpiration"] <= maxdte
             and contract["ask"] > self.config.min_contract_price
@@ -212,7 +219,7 @@ class OrderManager:
 
         stop, takeprofit = levelSet(price, standard_dev, cloud)
 
-        contract = getContractFromChain(symbol, price, stop, takeprofit, standard_dev,)
+        contract = getContractFromChain(symbol, price, stop, takeprofit, standard_dev, cloud.status[0])
         limit = contract["ask"] + self.config.limit_padding
 
         self.open(
