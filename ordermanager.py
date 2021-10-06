@@ -219,7 +219,9 @@ class OrderManager:
 
         stop, takeprofit = levelSet(price, standard_dev, cloud)
 
-        contract = getContractFromChain(symbol, price, stop, takeprofit, standard_dev, cloud.status[0])
+        contract = getContractFromChain(
+            symbol, price, stop, takeprofit, standard_dev, cloud.status[0]
+        )
         limit = contract["ask"] + self.config.limit_padding
 
         self.open(

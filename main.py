@@ -24,6 +24,7 @@ stream_client = StreamClient(client, account_id=int(os.getenv("account_number"))
 
 async def message_handling(msg, signaler, msghandler, ordmngr):
     # newdatafor in the form of [(symbol, service),...]
+    # or [(content, service),...] in the case of account activity
     newdatafor = await msghandler.handle(msg)
 
     if newdatafor[0][1] == "ACCOUNT_ACTIVITY":
