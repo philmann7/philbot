@@ -98,6 +98,7 @@ class Position:
     """
     Controls and tracks an options position
     """
+
     def __init__(self, contract, limit, takeprofit, stop, opened_on):
         self.contract = contract  # contract symbol
         self.opened_on = opened_on  # signaler.Signals.OPEN or OPEN_OR_INCREASE
@@ -107,7 +108,7 @@ class Position:
         self.associated_orders = {}  # id:status
 
         self.state = None  # PositionState
-        self.stop = stop # (StopType, offset)
+        self.stop = stop  # (StopType, offset)
         self.takeprofit = takeprofit
 
     # possibly move these into order manager
@@ -143,9 +144,9 @@ class Position:
         if price < stop_level + stop_offset:
             return self.close()
 
-        if price > self.takeprofit + (philrate * -.25):
+        if price > self.takeprofit + (philrate * -0.25):
             self.stop = (self.takeprofit, 0)
-            self.takeprofit = self.takeprofit + (philrate * .5)
+            self.takeprofit = self.takeprofit + (philrate * 0.5)
 
     def updateFromAccountActivity():
         """
