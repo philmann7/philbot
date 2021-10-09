@@ -4,6 +4,7 @@ from statistics import stdev
 import asyncio
 import datetime
 import json
+import re
 
 from tda.client import Client
 import httpx
@@ -99,3 +100,36 @@ async def getFlattenedChain(
     chain = await getOptionChain(client, symbol, strike_count, dte,)
     flattened = await flatten(chain)
     return flattened
+
+
+class AccountActivityXMLParse:
+    """
+    for parsing the xml data returned by the account activity stream.
+    gets data associated with the init parameter tags
+    """
+    def __init__:(self, tags):
+        """
+        tags = None for a default list of tags. the default list should
+        be pretty exhaustive of relevant ones.
+        ignore any tags the message is missing.
+        """
+        self.tags = tags or ["OrderKey", "ActivityTimestamp", "Symbol", "SecurityType", "Limit", "Bid", "Ask", "OrderType", "OrderEnteredDateTime", "OrderInstructions", "OriginalQuantity", "LastUpdated"]
+
+    def parse(self, xmlstring):
+        """
+        take a string of the xml returned from an account
+        activity stream message and return a dictionary
+        of data relevant to the tags in self.tags.
+        return format {tag:data} both str
+
+        naively parses the xml by splitting on < and >
+        then associating any found tags with the data
+        that follows it in the xml string.
+        """
+        relevant_account_data = {}
+        splitxml = re.split("[<>]", xmlstring)
+        for index, word in enumerate(splitxml):
+            if word in self.tags:
+                relevant_account_data[word] = splitxml[index+1]
+        return relevant_account_data
+
