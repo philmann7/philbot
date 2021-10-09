@@ -95,6 +95,9 @@ class OrderManagerConfig:
 
 
 class Position:
+    """
+    Controls and tracks an options position
+    """
     def __init__(self, contract, limit, takeprofit, stop, opened_on):
         self.contract = contract  # contract symbol
         self.opened_on = opened_on  # signaler.Signals.OPEN or OPEN_OR_INCREASE
@@ -104,23 +107,50 @@ class Position:
         self.associated_orders = {}  # id:status
 
         self.state = None  # PositionState
-        self.stop = stop
+        self.stop = stop # (StopType, offset)
         self.takeprofit = takeprofit
 
     # possibly move these into order manager
+    # an initializer. for adding to a position use updatePositionFromQuote
     def open(
         self, client,
     ):
+        """
+        For opening a position on the first valid buy signal.
+
+        This method should not be used to add to a position, for
+        that use updatePositionFromQuote and increase.
+        """
         pass
 
     def close():
         pass
 
     def increase():
-        pass
+        self.opened_on = Signals.OPEN_OR_INCREASE
 
-    def updatePosition():
+    def updatePositionFromQuote(self, cloud, signal, price):
+        """
+        Handles stop loss, take profit and adding to a position.
+        Opening a position and closing for other reasons
+        are handled elsewhere.
+        """
         # be sure to update stop with new ema or new ema+offset or whatever
+        if signal == Signals.OPEN_OR_INCREASE and self.opened_on == Signals.OPEN:
+            return self.increase()
+
+        stop_level, stop_offset = self.stop
+        if price < stop_level + stop_offset:
+            return self.close()
+
+        if price > self.takeprofit + (philrate * -.25):
+            self.stop = (self.takeprofit, 0)
+            self.takeprofit = self.takeprofit + (philrate * .5)
+
+    def updateFromAccountActivity():
+        """
+        Handles order status updates like order fills or UROUT messages
+        """
         pass
 
 
@@ -131,7 +161,7 @@ class OrderManager:
         self.config = config  # class OrderManagerConfig
         self.currentpositions = {}  # symbol:Position
 
-    def update(self, client, symbol, signal, newprice):
+    def updateFromQuote(self, client, cloud, symbol, signal, newprice):
         """
         update parameter is the output of
         signaler.update so update should be Signals.something
@@ -141,7 +171,7 @@ class OrderManager:
         if signal == Signals.CLOSE and symbol in self.currentpositions:
             self.currentpositions[symbol].close()
         elif symbol in self.currentpositions:
-            self.currentpositions[symbol].updatePosition(signal, newprice)
+            self.currentpositions[symbol].updatePositionFromQuote(signal, newprice)
         elif signal and signal != Signals.CLOSE:
             self.currentpositions[symbol] = self.openPositionFromSignal(
                 symbol, signal, client, cloud
