@@ -107,13 +107,27 @@ class AccountActivityXMLParse:
     for parsing the xml data returned by the account activity stream.
     gets data associated with the init parameter tags
     """
-    def __init__:(self, tags):
+
+    def __init__(self, tags):
         """
         tags = None for a default list of tags. the default list should
         be pretty exhaustive of relevant ones.
         ignore any tags the message is missing.
         """
-        self.tags = tags or ["OrderKey", "ActivityTimestamp", "Symbol", "SecurityType", "Limit", "Bid", "Ask", "OrderType", "OrderEnteredDateTime", "OrderInstructions", "OriginalQuantity", "LastUpdated"]
+        self.tags = tags or [
+            "OrderKey",
+            "ActivityTimestamp",
+            "Symbol",
+            "SecurityType",
+            "Limit",
+            "Bid",
+            "Ask",
+            "OrderType",
+            "OrderEnteredDateTime",
+            "OrderInstructions",
+            "OriginalQuantity",
+            "LastUpdated",
+        ]
 
     def parse(self, xmlstring):
         """
@@ -130,6 +144,5 @@ class AccountActivityXMLParse:
         splitxml = re.split("[<>]", xmlstring)
         for index, word in enumerate(splitxml):
             if word in self.tags:
-                relevant_account_data[word] = splitxml[index+1]
+                relevant_account_data[word] = splitxml[index + 1]
         return relevant_account_data
-
