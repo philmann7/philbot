@@ -9,9 +9,8 @@ from botutils import getStdDevForSymbol, getFlattenedChain
 from enum import Enum
 
 
-class PositionState(Enum):
-    OPEN, TRAIL_STOP = range(2)
-
+class StopType(Enum):
+    EMALong, EMAShort = range(2)
 
 # possibly turn this into class to store values like multipliers
 def levelSet(
@@ -37,17 +36,17 @@ def levelSet(
     takeprofitmod = takeprofitmod * directionmod
     stopmod = stopmod * directionmod
 
-    if cloudlocation == CloudPriceLocation.INSIDE:
-        stop = cloud.longEMA - (standard_deviation * stopmod)
+    if cloudlocation == CloudPriceLocation.INSIDE:  # ie passing through long ema
+        stop = (StopType.EMALong, (standard_deviation * stopmod * -1))
 
     if (
         cloudlocation == CloudPriceLocation.ABOVE
-        or cloudlocation == CloudPriceLocation.BELOW
+        or cloudlocation == CloudPriceLocation.BELOW # ie passing through short ema
     ):
-        # this is in case the long EMA is very far away
-        stop = min(
-            cloud.longEMA, cloud.shortEMA - (directionmod * 2 * standard_deviation)
-        )
+        stop = (StopType.EMALong, 0)
+        # or in case the long EMA is very far away
+        if abs(cloud.longEMA - currentprice) > abs(currentprice - (cloud.shortEMA - (directionmod * 2 * standard_deviation))):
+            stop = (StopType.EMAShort, (directionmod * 2 * standard_deviation))
 
     takeprofit = max(
         cloud.shortEMA + (standard_deviation * takeprofitmod),
@@ -111,6 +110,11 @@ class Position:
         self.stop = stop  # (StopType, offset)
         self.takeprofit = takeprofit
 
+    def stopTypeToLevel(self, stoptype, cloud):
+        """
+        gets a number from the type of stop (ie EMALong etc.)
+        """
+
     # possibly move these into order manager
     # an initializer. for adding to a position use updatePositionFromQuote
     def open(
@@ -136,15 +140,15 @@ class Position:
         Opening a position and closing for other reasons
         are handled elsewhere.
         """
-        # be sure to update stop with new ema or new ema+offset or whatever
         if signal == Signals.OPEN_OR_INCREASE and self.opened_on == Signals.OPEN:
             return self.increase()
 
-        stop_level, stop_offset = self.stop
+        stop_type, stop_offset = self.stop
+        stop_level = stopTypeToLevel(stop_type, cloud)
         if price < stop_level + stop_offset:
             return self.close()
 
-        if price > self.takeprofit + (philrate * -0.25):
+        if price > self.takeprofit + (philrate * 0.25):
             self.stop = (self.takeprofit, 0)
             self.takeprofit = self.takeprofit + (philrate * 0.5)
 
