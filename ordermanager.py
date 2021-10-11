@@ -241,7 +241,7 @@ class Position:
         self.associated_orders[otherdata["OrderKey"]] = message_type
         match message_type:
             case "OrderFill":
-                self.netpos += otherdata["OriginalQuantity"] if otherdata["OrderInstructions"] = "Buy" else -1 * otherdata["OriginalQuantity"]
+                self.netpos += otherdata["OriginalQuantity"] if otherdata["OrderInstructions"] == "Buy" else -1 * otherdata["OriginalQuantity"]
 
 
 class OrderManager:
