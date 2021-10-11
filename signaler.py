@@ -16,7 +16,10 @@ class Signals(Enum):
 
 class Signaler:
     def __init__(
-        self, client, symbol, history,
+        self,
+        client,
+        symbol,
+        history,
     ):
         history = history
         closevals = [candle["close"] for candle in history]

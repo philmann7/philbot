@@ -50,7 +50,10 @@ async def getStdDevForSymbol(client, symbol, period):
 
 
 async def getOptionChain(
-    client, symbol, strike_count, dte,
+    client,
+    symbol,
+    strike_count,
+    dte,
 ):
     """
     returns the option chain of the requested symbol.
@@ -92,12 +95,20 @@ async def flatten(chain):
 
 
 async def getFlattenedChain(
-    client, symbol, strike_count, dte,
+    client,
+    symbol,
+    strike_count,
+    dte,
 ):
     """
     combines the flatten and getOptionChain functions
     """
-    chain = await getOptionChain(client, symbol, strike_count, dte,)
+    chain = await getOptionChain(
+        client,
+        symbol,
+        strike_count,
+        dte,
+    )
     flattened = await flatten(chain)
     return flattened
 

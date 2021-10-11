@@ -13,17 +13,27 @@ class StopType(Enum):
     EMALong, EMAShort = range(2)
 
     @classmethod
-    def stopTypeToLevel(enm, stoptype, cloud):
+    def stopTypeToLevel(cls, stoptype, cloud):
         """
         gets a number from the type of stop (ie EMALong etc.)
         """
         match stoptype:
-            case enm.EMAShort:
+            case cls.EMAShort:
                 return cloud.shortEMA
-            case enm.EMALong:
+            case cls.EMALong:
                 return cloud.longEMA
             case other:
                 return other
+
+    @classmethod
+    def stopTupleToLevel(cls, stoptuple, cloud):
+        """
+        returns a level (price) from a stop tuple
+        stop tuple expected in the format of
+        (StopType, priceoffset: float)
+        """
+        stoptype, offset = stoptuple
+        return cls.stopTypeToLevel(stoptype, cloud) + offset
 
 # possibly turn this into class to store values like multipliers
 def levelSet(
@@ -33,6 +43,8 @@ def levelSet(
     calculates risk and reward levels.
     should return a stop loss and take profit levels
     for opening a new position
+
+    returns a stop (in the format (StopType, offset) and a take profit level)
     """
     stop = None
     takeprofit = None
@@ -53,15 +65,20 @@ def levelSet(
         stop = (StopType.EMALong, (standard_deviation * stopmod * -1))
 
     if (
-        cloudlocation == CloudPriceLocation.ABOVE
-        or cloudlocation == CloudPriceLocation.BELOW # ie passing through short ema
+        cloudlocation == CloudPriceLocation.ABOVE# ie passing through short ema
+        or cloudlocation == CloudPriceLocation.BELOW # from either cloud
     ):
         stop = (StopType.EMALong, 0)
         # or in case the long EMA is very far away
         if abs(cloud.longEMA - currentprice) > abs(currentprice - (cloud.shortEMA - (directionmod * 2 * standard_deviation))):
             stop = (StopType.EMAShort, (directionmod * 2 * standard_deviation))
 
+    riskloss = abs(currentprice - StopType.stopTupleToLevel(stop, cloud))
+
     takeprofit = cloud.shortEMA + (standard_deviation * takeprofitmod)
+    # enforce 3:1 reward:risk if takeprofit is very far away
+    if abs(currentprice-takeprofit) > 4 * riskloss:
+        takeprofit = currentprice + (directionmod * 3 * riskloss)
 
     return stop, takeprofit
 
