@@ -12,6 +12,19 @@ from enum import Enum
 class StopType(Enum):
     EMALong, EMAShort = range(2)
 
+    @classmethod
+    def stopTypeToLevel(enm, stoptype, cloud):
+        """
+        gets a number from the type of stop (ie EMALong etc.)
+        """
+        match stoptype:
+            case enm.EMAShort:
+                return cloud.shortEMA
+            case enm.EMALong:
+                return cloud.longEMA
+            case other:
+                return other
+
 # possibly turn this into class to store values like multipliers
 def levelSet(
     currentprice, standard_deviation, cloud,
@@ -48,10 +61,7 @@ def levelSet(
         if abs(cloud.longEMA - currentprice) > abs(currentprice - (cloud.shortEMA - (directionmod * 2 * standard_deviation))):
             stop = (StopType.EMAShort, (directionmod * 2 * standard_deviation))
 
-    takeprofit = max(
-        cloud.shortEMA + (standard_deviation * takeprofitmod),
-        2 * abs(currentprice - stop),
-    )
+    takeprofit = cloud.shortEMA + (standard_deviation * takeprofitmod)
 
     return stop, takeprofit
 
@@ -110,10 +120,6 @@ class Position:
         self.stop = stop  # (StopType, offset)
         self.takeprofit = takeprofit
 
-    def stopTypeToLevel(self, stoptype, cloud):
-        """
-        gets a number from the type of stop (ie EMALong etc.)
-        """
 
     # possibly move these into order manager
     # an initializer. for adding to a position use updatePositionFromQuote
