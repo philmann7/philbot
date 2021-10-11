@@ -6,6 +6,8 @@ from signaler import Signals
 from ema import CloudColor, CloudPriceLocation
 from botutils import getStdDevForSymbol, getFlattenedChain
 
+from tda.orders.options import option_buy_to_open_limit, option_sell_to_close_limit
+
 from enum import Enum
 
 
@@ -36,6 +38,8 @@ class StopType(Enum):
         return cls.stopTypeToLevel(stoptype, cloud) + offset
 
 # possibly turn this into class to store values like multipliers
+
+
 def levelSet(
     currentprice, standard_deviation, cloud,
 ):
@@ -65,8 +69,8 @@ def levelSet(
         stop = (StopType.EMALong, (standard_deviation * stopmod * -1))
 
     if (
-        cloudlocation == CloudPriceLocation.ABOVE# ie passing through short ema
-        or cloudlocation == CloudPriceLocation.BELOW # from either cloud
+        cloudlocation == CloudPriceLocation.ABOVE  # ie passing through short ema
+        or cloudlocation == CloudPriceLocation.BELOW  # from either cloud
     ):
         stop = (StopType.EMALong, 0)
         # or in case the long EMA is very far away
@@ -113,8 +117,10 @@ class OrderManagerConfig:
         self.max_contract_price = max_contract_price
         self.min_contract_price = min_contract_price
         self.max_spread = max_spread  # bid/ask spread
-        self.max_loss = max_loss  # on price of contract so use option pricing convention ie .10 for 10 dollars
-        self.min_risk_reward_ratio = min_risk_reward_ratio  # profit/loss expected_move_to_profit/expected_move_to_stop
+        # on price of contract so use option pricing convention ie .10 for 10 dollars
+        self.max_loss = max_loss
+        # profit/loss expected_move_to_profit/expected_move_to_stop
+        self.min_risk_reward_ratio = min_risk_reward_ratio
         self.strike_count = strike_count  # number of strikes to ask the API for
         self.limit_padding = limit_padding  # if set to 0.01 the limit buy will
         # be set at ask+.01
@@ -137,11 +143,11 @@ class Position:
         self.stop = stop  # (StopType, offset)
         self.takeprofit = takeprofit
 
-
     # possibly move these into order manager
     # an initializer. for adding to a position use updatePositionFromQuote
+
     def open(
-        self, client,
+        self, client, account_id, limit,
     ):
         """
         For opening a position on the first valid buy signal.
@@ -149,7 +155,17 @@ class Position:
         This method should not be used to add to a position, for
         that use updatePositionFromQuote and increase.
         """
-        pass
+        response = client.place_order(account_id,
+            option_buy_to_open_limit(self.contract, 1, limit)
+                .build()
+        )
+        assert r.status_code == httpx.codes.OK, r.raise_for_status()
+        order_id = Utils(client, account_id).extract_order_id(response)
+        # order_id is potentially None
+        if not order_id:
+            return 0
+        self.associated_orders[order_id] = "OPEN"
+        return order_id
 
     def close():
         pass
@@ -199,7 +215,8 @@ class OrderManager:
         if signal == Signals.CLOSE and symbol in self.currentpositions:
             self.currentpositions[symbol].close()
         elif symbol in self.currentpositions:
-            self.currentpositions[symbol].updatePositionFromQuote(signal, newprice)
+            self.currentpositions[symbol].updatePositionFromQuote(
+                signal, newprice)
         elif signal and signal != Signals.CLOSE:
             self.currentpositions[symbol] = self.openPositionFromSignal(
                 symbol, signal, client, cloud
