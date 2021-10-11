@@ -168,11 +168,45 @@ class Position:
         self.associated_orders[order_id] = "OPEN"
         return order_id
 
-    def close():
-        pass
+    def close(self, client, account_id):
+        """
+        Cancels any orders not already canceled or filled.
+        Sells to close any contracts currently held.
+        """
+        # canceling orders
+        for order_id in self.associated_orders:
+            if self.associated_orders[order_id] not in {'PENDING_CANCEL', 'CANCELED', 'FILLED'. 'REPLACED', 'EXPIRED'}:
+                try:
+                    client.cancel_order(account_id, order_id)
+                except Exception as e:
+                    print{f"Exception canceling order (id: {order_id}:{self.associated_orders[order_id]}):\n{e}"}
+        # selling to close out position (important that this is done 
+        # after canceling so sell orders don't get canceled)
+        response = client.place_order(account_id,
+            option_sell_to_close_market(self.contract, self.netpos,)
+                .build()
+        )
+        assert r.status_code == httpx.codes.OK, r.raise_for_status()
+        order_id = Utils(client, account_id).extract_order_id(response)
+        # order_id is potentially None
+        if not order_id:
+            return 0
+        self.associated_orders[order_id] = "SELL_TO_CLOSE"
+        return order_id
 
     def increase():
         self.opened_on = Signals.OPEN_OR_INCREASE
+        response = client.place_order(account_id,
+            option_buy_to_open_market(self.contract, 1,)
+                .build()
+        )
+        assert r.status_code == httpx.codes.OK, r.raise_for_status()
+        order_id = Utils(client, account_id).extract_order_id(response)
+        # order_id is potentially None
+        if not order_id:
+            return 0
+        self.associated_orders[order_id] = "OPEN"
+        return order_id
 
     def updatePositionFromQuote(self, cloud, signal, price):
         """
