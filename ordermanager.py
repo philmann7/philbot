@@ -194,7 +194,12 @@ class Position:
         self.associated_orders[order_id] = "SELL_TO_CLOSE"
         return order_id
 
-    def increase():
+    def increase(
+        self, client, account_id,
+        ):
+        """
+        Adds to the position
+        """
         self.opened_on = Signals.OPEN_OR_INCREASE
         response = client.place_order(account_id,
             option_buy_to_open_market(self.contract, 1,)
@@ -208,7 +213,7 @@ class Position:
         self.associated_orders[order_id] = "OPEN"
         return order_id
 
-    def updatePositionFromQuote(self, cloud, signal, price):
+    def updatePositionFromQuote(self, cloud, signal, price, standard_deviation):
         """
         Handles stop loss, take profit and adding to a position.
         Opening a position and closing for other reasons
@@ -222,15 +227,21 @@ class Position:
         if price < stop_level + stop_offset:
             return self.close()
 
+        philrate = self.netpos * standard_deviation * self.contractdelta
+
         if price > self.takeprofit + (philrate * 0.25):
             self.stop = (self.takeprofit, 0)
             self.takeprofit = self.takeprofit + (philrate * 0.5)
 
-    def updateFromAccountActivity():
+    def updateFromAccountActivity(self, message_type, otherdata):
         """
-        Handles order status updates like order fills or UROUT messages
+        Handles order status updates like order fills or UROUT messages.
+        otherdata argument should be the output of the XML data parser.
         """
-        pass
+        self.associated_orders[otherdata["OrderKey"]] = message_type
+        match message_type:
+            case "OrderFill":
+                self.netpos += otherdata["OriginalQuantity"] if otherdata["OrderInstructions"] = "Buy" else -1 * otherdata["OriginalQuantity"]
 
 
 class OrderManager:
