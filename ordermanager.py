@@ -7,6 +7,7 @@ from ema import CloudColor, CloudPriceLocation
 from botutils import getStdDevForSymbol, getFlattenedChain
 
 from tda.orders.options import option_buy_to_open_limit, option_sell_to_close_limit
+from tda.utils import Utils
 
 from enum import Enum
 
