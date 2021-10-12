@@ -139,7 +139,7 @@ class Position:
     Controls and tracks an options position
     """
 
-    def __init__(self, contract, limit, takeprofit, stop, state):
+    def __init__(self, contract, takeprofit, stop, state):
         self.contract = contract  # contract symbol
         self.state = state  # signaler.Signals.OPEN or OPEN_OR_INCREASE
         # if opened on OPEN_OR_INCREASE only allow position size 1
@@ -381,14 +381,13 @@ class OrderManager:
     def openPositionFromSignal(
         self, symbol, signal, client, cloud, price,
     ):
-        period = 50
-        standard_dev = getStdDevForSymbol(client, symbol, period)
+        standard_dev = getStdDevForSymbol(client, symbol, self.config.stdev_period)
 
         stop, takeprofit = levelSet(price, standard_dev, cloud)
         stop_level = StopType.stopTupleToLevel(stop, cloud)
 
         contract = getContractFromChain(
-            symbol, price, stop_level, takeprofit, standard_dev, cloud.status[0]
+            client, symbol, take_profit, stop_level, price, cloud.status[0],
         )
         limit = contract["ask"] + self.config.limit_padding
 
