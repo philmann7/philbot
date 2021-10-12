@@ -134,15 +134,14 @@ class Position:
     Controls and tracks an options position
     """
 
-    def __init__(self, contract, limit, takeprofit, stop, opened_on):
+    def __init__(self, contract, limit, takeprofit, stop, state):
         self.contract = contract  # contract symbol
-        self.opened_on = opened_on  # signaler.Signals.OPEN or OPEN_OR_INCREASE
+        self.state = state  # signaler.Signals.OPEN or OPEN_OR_INCREASE
         # if opened on OPEN_OR_INCREASE only allow position size 1
 
         self.netpos = 0
         self.associated_orders = {}  # id:status
 
-        self.state = None  # PositionState
         self.stop = stop  # (StopType, offset)
         self.takeprofit = takeprofit
 
@@ -176,6 +175,7 @@ class Position:
         Cancels any orders not already canceled or filled.
         Sells to close any contracts currently held.
         """
+        self.state = Signals.EXIT
         # canceling orders
         for order_id in self.associated_orders:
             if self.associated_orders[order_id] not in {'PENDING_CANCEL', 'CANCELED', 'FILLED'. 'REPLACED', 'EXPIRED'}:
@@ -204,7 +204,7 @@ class Position:
         """
         Adds to the position
         """
-        self.opened_on = Signals.OPEN_OR_INCREASE
+        self.state = Signals.OPEN_OR_INCREASE
         response = client.place_order(account_id,
                                       option_buy_to_open_market(
                                           self.contract, 1,)
@@ -225,10 +225,14 @@ class Position:
         Opening a position and closing for other reasons
         are handled elsewhere.
         """
-        if signal == Signals.OPEN_OR_INCREASE and self.opened_on == Signals.OPEN:
+        if self.state == Signals.EXIT:
+            return Signals.EXIT
+
+        if signal == Signals.OPEN_OR_INCREASE and self.state == Signals.OPEN:
             return self.increase()
 
         cloud_color = cloud.status[0]
+
         stop_level = StopType.stopTupleToLevel(self.stop, cloud)
         if (price < stop_level and cloud_color == CloudColor.GREEN) or (
                 price > stop_level and cloud_color == CloudColor.RED):
@@ -327,10 +331,10 @@ class OrderManager:
         return highest_delta_contract
 
     def open(
-        self, symbol, contract, limit, takeprofit, stop, opened_on_signal,
+        self, symbol, contract, limit, takeprofit, stop, state_signal,
     ):
         self.currentpositions[symbol] = Position(
-            contract, limit, takeprofit, stop, opened_on_signal
+            contract, limit, takeprofit, stop, state_signal
         )
         self.currentpositions[symbol].open()
 
