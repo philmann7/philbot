@@ -299,6 +299,7 @@ class OrderManager:
         signaler.update so update should be Signals.something
         or 0
         """
+        # garbage collection
         if symbol in self.currentpositions and self.currentpositions[symbol].closed_time:
             now = datetime.now()
             if timedelta.total_seconds(now-self.currentpositions[symbol].closed_time) > self.config.time_btwn_positions:
@@ -309,6 +310,7 @@ class OrderManager:
         if signal == Signals.CLOSE and symbol in self.currentpositions:
             self.currentpositions[symbol].close(client, account_id)
         elif symbol in self.currentpositions:
+            self.currentpositions[symbol].checkTimeouts(self.config.order_timeout_length)
             self.currentpositions[symbol].updatePositionFromQuote(
                 signal, newprice)
         elif signal and signal != Signals.CLOSE:
@@ -383,4 +385,4 @@ class OrderManager:
         self.currentpositions[symbol] = Position(
             contract["symbol"], takeprofit, stop, state_signal
         )
-        .open(client, account_id, limit)
+        self.currentpositions[symbol].open(client, account_id, limit)
