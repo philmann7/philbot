@@ -10,7 +10,7 @@ from tda.client import Client
 import httpx
 
 
-async def gethistory(client, symbol):
+def gethistory(client, symbol):
     """
     returns today's minute-by-minute OHCLV history
     """
@@ -31,7 +31,7 @@ async def gethistory(client, symbol):
     return history["candles"]
 
 
-async def getStdDev(candles, period, values="close"):
+def getStdDev(candles, period, values="close"):
     """
     takes input of gethistory.
     uses close vals by default
@@ -40,16 +40,16 @@ async def getStdDev(candles, period, values="close"):
     return stdev([candle[values] for candle in candles[-period:]])
 
 
-async def getStdDevForSymbol(client, symbol, period):
+def getStdDevForSymbol(client, symbol, period):
     """
     convenience func to combin getStdDev and gethistory
     """
-    history = await gethistory(client, symbol)
-    standard_deviation = await getStdDev(history, period)
+    history = gethistory(client, symbol)
+    standard_deviation = getStdDev(history, period)
     return standard_deviation
 
 
-async def getOptionChain(
+def getOptionChain(
     client,
     symbol,
     strike_count,
@@ -75,7 +75,7 @@ async def getOptionChain(
     return chain
 
 
-async def flatten(chain):
+def flatten(chain):
     """
     take input from getOptionChain()
     and flatten so that each contract is on its own.
@@ -94,7 +94,7 @@ async def flatten(chain):
     return flattened
 
 
-async def getFlattenedChain(
+def getFlattenedChain(
     client,
     symbol,
     strike_count,
@@ -103,13 +103,13 @@ async def getFlattenedChain(
     """
     combines the flatten and getOptionChain functions
     """
-    chain = await getOptionChain(
+    chain = getOptionChain(
         client,
         symbol,
         strike_count,
         dte,
     )
-    flattened = await flatten(chain)
+    flattened = flatten(chain)
     return flattened
 
 

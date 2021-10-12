@@ -44,7 +44,7 @@ def message_handling(msg, signaler, msghandler, ordmngr):
         # for signaler in signalers if signaler.symbol == symbol
     ]
     ordermngupdate = [
-        ordmngr.updateFromQuote(symbol, signal, newprice)
+        ordmngr.updateFromQuote(client, int(os.getenv("account_number")), cloud, symbol, signal, newprice)
         for (symbol, (signal, newprice)) in updates
     ]
     print(signaler)

@@ -365,6 +365,7 @@ class OrderManager:
             contract
             for contract in contracts
             if abs(contract["delta"]) * expected_move_to_stop < self.config.max_loss
+            and expected_move_to_profit / expected_move_to_stop > self.config.min_risk_reward_ratio
         ]
 
         # there can only be one
