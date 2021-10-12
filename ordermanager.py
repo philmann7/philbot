@@ -312,14 +312,18 @@ class OrderManager:
         # this will be a cloud color change
         if signal == Signals.CLOSE and symbol in self.currentpositions:
             self.currentpositions[symbol].close(client, account_id)
+
         elif symbol in self.currentpositions:
             self.currentpositions[symbol].checkTimeouts(
-                self.config.order_timeout_length)
+                client, account_id, self.config.order_timeout_length)
+
+            standard_deviation = getStdDevForSymbol(client, symbol, self.config.stdev_period)
             self.currentpositions[symbol].updatePositionFromQuote(
-                signal, newprice)
+                cloud, signal, newprice, standard_deviation)
+
         elif signal and signal != Signals.CLOSE:
             self.currentpositions[symbol] = self.openPositionFromSignal(
-                symbol, signal, client, cloud
+                symbol, signal, client, cloud, newprice,
             )
 
     def updateFromAccountActivity(self, symbol, message_type, data):
