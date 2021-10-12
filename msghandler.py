@@ -1,3 +1,6 @@
+from botutils import AccountActivityXMLParse
+
+
 class MessageHandler:
     def __init__(self, fields=None):
         self.fields = fields or {
@@ -10,8 +13,7 @@ class MessageHandler:
             "LOW_PRICE"}
         # desired fields from the stream, not relevant for account activity stream, that's handled elsewhere
         # {service: fields}
-        self.last_messages = {service: {} for service in fields}  # dict
-        # keys will be the 'service' ie QUOTE or CHART_EQUITY
+        self.last_messages = {symbol:{} for symbol in {"SPY"}}
 
     def handle(self, msg):
         service = msg["service"]
@@ -20,6 +22,13 @@ class MessageHandler:
         if service == "ACCOUNT_ACTIVITY":
             return [(content, "ACCOUNT_ACTIVITY")
                     for content in msg["content"]]
+
+        if service == "ACCOUNT_ACTIVITY":
+            for content in msg["content"]:
+                msg_type = content['MESSAGE_TYPE']
+                msg_data = AccountActivityXMLParse().parse(msg["MESSAGE_DATA"])
+                symbol = msg_data["Symbol"].split("_")[0]
+                newdatafor.append(((symbol, msg_type, msg_data), "ACCOUNT_ACTIVITY"))
 
         # should be one content for each symbol
         for content in msg["content"]:
@@ -31,6 +40,6 @@ class MessageHandler:
             }
 
             # dict update operator
-            self.last_messages[service][symbol] |= relevantdata
+            self.last_messages[symbol] |= relevantdata
             newdatafor.append((symbol, service))
         return newdatafor

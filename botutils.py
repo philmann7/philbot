@@ -119,7 +119,7 @@ class AccountActivityXMLParse:
     gets data associated with the init parameter tags
     """
 
-    def __init__(self, tags):
+    def __init__(self, tags=None):
         """
         tags = None for a default list of tags. the default list should
         be pretty exhaustive of relevant ones.
@@ -151,7 +151,7 @@ class AccountActivityXMLParse:
         then associating any found tags with the data
         that follows it in the xml string.
         """
-        relevant_account_data = {}
+        relevant_account_data = {}  # tag:data
         splitxml = re.split("[<>]", xmlstring)
         for index, word in enumerate(splitxml):
             if word in self.tags:

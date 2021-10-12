@@ -24,22 +24,22 @@ stream_client = StreamClient(
         os.getenv("account_number")))
 
 
-async def message_handling(msg, signaler, msghandler, ordmngr):
+def message_handling(msg, signaler, msghandler, ordmngr):
     # newdatafor in the form of [(symbol, service),...]
     # or [(content, service),...] in the case of account activity
-    newdatafor = await msghandler.handle(msg)
+    newdatafor = msghandler.handle(msg)
 
     if newdatafor[0][1] == "ACCOUNT_ACTIVITY":
         return [
-            ordmngr.updateFromAccountActivity(content)
-            for (content, service) in newdatafor
+            ordmngr.updateFromAccountActivity(symbol, msg_type, msg_data)
+            for ((symbol, msg_type, msg_data), service) in newdatafor
         ]
 
     # the way signaler is currently written it should be only for one symbol
     # so multiple symbols will break this
     updates = [
         (symbol, signaler.update(
-            service, msghandler.last_messages[service][symbol]))
+            service, msghandler.last_messages[symbol]))
         for (symbol, service) in newdatafor
         # for signaler in signalers if signaler.symbol == symbol
     ]
