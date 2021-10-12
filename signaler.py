@@ -19,9 +19,8 @@ class Signaler:
         self,
         client,
         symbol,
-        history,
     ):
-        history = history
+        history = gethistory(client, symbol)
         closevals = [candle["close"] for candle in history]
 
         shortEMA = expMovAvg(closevals.copy(), 9)

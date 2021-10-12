@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 from msghandler import MessageHandler
 from signaler import Signaler
-from ordermanager import OrderManager
+from ordermanager import OrderManager, OrderManagerConfig
 
 load_dotenv()
 
@@ -78,8 +78,22 @@ async def read_stream(msghandler, signaler, ordmngr):
 
 async def main():
     msghandler = MessageHandler()
-    signaler = Signaler()
-    ordmngr = OrderManager()
+    signaler = Signaler(client, "SPY")
+    ordermanager_config = OrderManagerConfig(
+        stdev_period=50,
+        mindte=2,
+        maxdte=3,
+        max_contract_price=2.0,
+        min_contract_price=0.80,
+        max_spread=0.05,
+        max_loss=.15,
+        min_risk_reward_ratio=2.1,
+        strike_count=5,
+        limit_padding=.01,
+        time_btwn_positions=300,
+        order_timeout_length=30,
+    )
+    ordmngr = OrderManager(ordermanager_config)
     await read_stream(msghandler, signaler, ordmngr)
 
 

@@ -111,7 +111,7 @@ class OrderManagerConfig:
         min_risk_reward_ratio,
         strike_count,
         limit_padding,
-        time_btwn_positions,
+        time_btwn_positions,  # this and order_timeout_length in seconds
         order_timeout_length,
     ):
         self.stdev_period = (
