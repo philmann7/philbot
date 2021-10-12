@@ -57,7 +57,6 @@ class Signaler:
         else:
             return 0
 
-
     def cloudStatusToSignal(self, status, newstatus):
         """
         Input should come from the update function

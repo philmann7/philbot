@@ -13,7 +13,7 @@ class MessageHandler:
             "LOW_PRICE"}
         # desired fields from the stream, not relevant for account activity stream, that's handled elsewhere
         # {service: fields}
-        self.last_messages = {symbol:{} for symbol in {"SPY"}}
+        self.last_messages = {symbol: {} for symbol in {"SPY"}}
 
     def handle(self, msg):
         service = msg["service"]
@@ -28,7 +28,8 @@ class MessageHandler:
                 msg_type = content['MESSAGE_TYPE']
                 msg_data = AccountActivityXMLParse().parse(msg["MESSAGE_DATA"])
                 symbol = msg_data["Symbol"].split("_")[0]
-                newdatafor.append(((symbol, msg_type, msg_data), "ACCOUNT_ACTIVITY"))
+                newdatafor.append(
+                    ((symbol, msg_type, msg_data), "ACCOUNT_ACTIVITY"))
 
         # should be one content for each symbol
         for content in msg["content"]:
