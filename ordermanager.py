@@ -254,8 +254,8 @@ class Position:
         self.associated_orders[otherdata["OrderKey"]] = message_type
         match message_type:
             case "OrderFill":
-                self.netpos += otherdata["OriginalQuantity"] if otherdata["OrderInstructions"] == "Buy" else - \
-                    1 * otherdata["OriginalQuantity"]
+                self.netpos += otherdata["OriginalQuantity"] if otherdata["OrderInstructions"] == "Buy" else \
+                    -1 * otherdata["OriginalQuantity"]
 
 
 class OrderManager:
@@ -265,7 +265,7 @@ class OrderManager:
         self.config = config  # class OrderManagerConfig
         self.currentpositions = {}  # symbol:Position
 
-    def updateFromQuote(self, client, cloud, symbol, signal, newprice):
+    def updateFromQuote(self, client, account_id, cloud, symbol, signal, newprice):
         """
         update parameter is the output of
         signaler.update so update should be Signals.something
@@ -273,7 +273,7 @@ class OrderManager:
         """
         # this will be a cloud color change
         if signal == Signals.CLOSE and symbol in self.currentpositions:
-            self.currentpositions[symbol].close()
+            self.currentpositions[symbol].close(client, account_id)
         elif symbol in self.currentpositions:
             self.currentpositions[symbol].updatePositionFromQuote(
                 signal, newprice)
@@ -282,12 +282,12 @@ class OrderManager:
                 symbol, signal, client, cloud
             )
 
-    def updateFromAccountActivity():
+    def updateFromAccountActivity(self, symbol, message_type, data):
         """
         handles new messages from the account activity stream
         like order fills or cancels
         """
-        pass
+        self.currentpositions[symbol].updateFromAccountActivity(message_type, data)
 
     def getContractFromChain(
         self, client, symbol, take_profit, stop, currentprice, cloudcolor
