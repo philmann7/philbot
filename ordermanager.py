@@ -75,14 +75,15 @@ def levelSet(
     ):
         stop = (StopType.EMALong, 0)
         # or in case the long EMA is very far away
-        if abs(cloud.longEMA - currentprice) > abs(currentprice - (cloud.shortEMA - (directionmod * 2 * standard_deviation))):
+        if abs(cloud.longEMA - currentprice) > abs(currentprice -
+                                                   (cloud.shortEMA - (directionmod * 2 * standard_deviation))):
             stop = (StopType.EMAShort, (directionmod * 2 * standard_deviation))
 
     riskloss = abs(currentprice - StopType.stopTupleToLevel(stop, cloud))
 
     takeprofit = cloud.shortEMA + (standard_deviation * takeprofitmod)
     # enforce 3:1 reward:risk if takeprofit is very far away
-    if abs(currentprice-takeprofit) > 4 * riskloss:
+    if abs(currentprice - takeprofit) > 4 * riskloss:
         takeprofit = currentprice + (directionmod * 3 * riskloss)
 
     return stop, takeprofit
@@ -118,7 +119,8 @@ class OrderManagerConfig:
         self.max_contract_price = max_contract_price
         self.min_contract_price = min_contract_price
         self.max_spread = max_spread  # bid/ask spread
-        # on price of contract so use option pricing convention ie .10 for 10 dollars
+        # on price of contract so use option pricing convention ie .10 for 10
+        # dollars
         self.max_loss = max_loss
         # profit/loss expected_move_to_profit/expected_move_to_stop
         self.min_risk_reward_ratio = min_risk_reward_ratio
@@ -157,9 +159,10 @@ class Position:
         that use updatePositionFromQuote and increase.
         """
         response = client.place_order(account_id,
-            option_buy_to_open_limit(self.contract, 1, limit)
-                .build()
-        )
+                                      option_buy_to_open_limit(
+                                          self.contract, 1, limit)
+                                      .build()
+                                      )
         assert r.status_code == httpx.codes.OK, r.raise_for_status()
         order_id = Utils(client, account_id).extract_order_id(response)
         # order_id is potentially None
@@ -180,12 +183,13 @@ class Position:
                     client.cancel_order(account_id, order_id)
                 except Exception as e:
                     print{f"Exception canceling order (id: {order_id}:{self.associated_orders[order_id]}):\n{e}"}
-        # selling to close out position (important that this is done 
+        # selling to close out position (important that this is done
         # after canceling so sell orders don't get canceled)
         response = client.place_order(account_id,
-            option_sell_to_close_market(self.contract, self.netpos,)
-                .build()
-        )
+                                      option_sell_to_close_market(
+                                          self.contract, self.netpos,)
+                                      .build()
+                                      )
         assert r.status_code == httpx.codes.OK, r.raise_for_status()
         order_id = Utils(client, account_id).extract_order_id(response)
         # order_id is potentially None
@@ -196,15 +200,16 @@ class Position:
 
     def increase(
         self, client, account_id,
-        ):
+    ):
         """
         Adds to the position
         """
         self.opened_on = Signals.OPEN_OR_INCREASE
         response = client.place_order(account_id,
-            option_buy_to_open_market(self.contract, 1,)
-                .build()
-        )
+                                      option_buy_to_open_market(
+                                          self.contract, 1,)
+                                      .build()
+                                      )
         assert r.status_code == httpx.codes.OK, r.raise_for_status()
         order_id = Utils(client, account_id).extract_order_id(response)
         # order_id is potentially None
@@ -213,7 +218,8 @@ class Position:
         self.associated_orders[order_id] = "OPEN"
         return order_id
 
-    def updatePositionFromQuote(self, cloud, signal, price, standard_deviation):
+    def updatePositionFromQuote(
+            self, cloud, signal, price, standard_deviation):
         """
         Handles stop loss, take profit and adding to a position.
         Opening a position and closing for other reasons
@@ -241,7 +247,8 @@ class Position:
         self.associated_orders[otherdata["OrderKey"]] = message_type
         match message_type:
             case "OrderFill":
-                self.netpos += otherdata["OriginalQuantity"] if otherdata["OrderInstructions"] == "Buy" else -1 * otherdata["OriginalQuantity"]
+                self.netpos += otherdata["OriginalQuantity"] if otherdata["OrderInstructions"] == "Buy" else - \
+                    1 * otherdata["OriginalQuantity"]
 
 
 class OrderManager:

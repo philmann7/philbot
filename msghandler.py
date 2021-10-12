@@ -10,7 +10,8 @@ class MessageHandler:
         newdatafor = []
 
         if service == "ACCOUNT_ACTIVITY":
-            return [(content, "ACCOUNT_ACTIVITY") for content in msg["content"]]
+            return [(content, "ACCOUNT_ACTIVITY")
+                    for content in msg["content"]]
 
         # should be one content for each symbol
         for content in msg["content"]:

@@ -19,7 +19,9 @@ client = easy_client(
     redirect_uri="https://localhost",
     token_path="token.json",
 )
-stream_client = StreamClient(client, account_id=int(os.getenv("account_number")))
+stream_client = StreamClient(
+    client, account_id=int(
+        os.getenv("account_number")))
 
 
 async def message_handling(msg, signaler, msghandler, ordmngr):
@@ -36,7 +38,8 @@ async def message_handling(msg, signaler, msghandler, ordmngr):
     # the way signaler is currently written it should be only for one symbol
     # so multiple symbols will break this
     updates = [
-        (symbol, signaler.update(service, msghandler.last_messages[service][symbol]))
+        (symbol, signaler.update(
+            service, msghandler.last_messages[service][symbol]))
         for (symbol, service) in newdatafor
         # for signaler in signalers if signaler.symbol == symbol
     ]
@@ -52,7 +55,8 @@ async def read_stream(msghandler, signaler, ordmngr):
     # await stream_client.quality_of_service(StreamClient.QOSLevel.EXPRESS)
 
     # Always add handlers before subscribing because many streams start sending
-    # data immediately after success, and messages with no handlers are dropped.
+    # data immediately after success, and messages with no handlers are
+    # dropped.
     stream_client.add_chart_equity_handler(
         lambda msg: message_handling(msg, signaler, msghandler, ordmngr)
     )
