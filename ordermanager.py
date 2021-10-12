@@ -279,7 +279,8 @@ class Position:
         """
         now = datetime.now()
         for order_id in self.associated_orders:
-            if self.associated_orders[order_id] == "OPEN" and timedelta.total_seconds(now - self.opened_time) < timeoutlength:
+            if self.associated_orders[order_id] == "OPEN" and timedelta.total_seconds(
+                    now - self.opened_time) < timeoutlength:
                 try:
                     client.cancel_order(account_id, order_id)
                 except Exception as e:
@@ -293,7 +294,8 @@ class OrderManager:
         self.config = config  # class OrderManagerConfig
         self.currentpositions = {}  # symbol:Position
 
-    def updateFromQuote(self, client, account_id, cloud, symbol, signal, newprice):
+    def updateFromQuote(self, client, account_id, cloud,
+                        symbol, signal, newprice):
         """
         update parameter is the output of
         signaler.update so update should be Signals.something
@@ -302,7 +304,8 @@ class OrderManager:
         # garbage collection
         if symbol in self.currentpositions and self.currentpositions[symbol].closed_time:
             now = datetime.now()
-            if timedelta.total_seconds(now-self.currentpositions[symbol].closed_time) > self.config.time_btwn_positions:
+            if timedelta.total_seconds(
+                    now - self.currentpositions[symbol].closed_time) > self.config.time_btwn_positions:
                 self.currentpositions.pop(symbol)
             else:
                 return 0
@@ -310,7 +313,8 @@ class OrderManager:
         if signal == Signals.CLOSE and symbol in self.currentpositions:
             self.currentpositions[symbol].close(client, account_id)
         elif symbol in self.currentpositions:
-            self.currentpositions[symbol].checkTimeouts(self.config.order_timeout_length)
+            self.currentpositions[symbol].checkTimeouts(
+                self.config.order_timeout_length)
             self.currentpositions[symbol].updatePositionFromQuote(
                 signal, newprice)
         elif signal and signal != Signals.CLOSE:
@@ -323,7 +327,8 @@ class OrderManager:
         handles new messages from the account activity stream
         like order fills or cancels
         """
-        self.currentpositions[symbol].updateFromAccountActivity(message_type, data)
+        self.currentpositions[symbol].updateFromAccountActivity(
+            message_type, data)
 
     def getContractFromChain(
         self, client, symbol, take_profit, stop, currentprice, cloudcolor
