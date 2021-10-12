@@ -1,6 +1,7 @@
 class MessageHandler:
-    def __init__(self, fields):
-        self.fields = fields  # desired fields from the stream
+    def __init__(self, fields=None):
+        self.fields = fields or {"BID_PRICE", "ASK_PRICE", "key", "OPEN_PRICE", "CLOSE_PRICE", "HIGH_PRICE", "LOW_PRICE"}
+        # desired fields from the stream, not relevant for account activity stream, that's handled elsewhere
         # {service: fields}
         self.last_messages = {service: {} for service in fields}  # dict
         # keys will be the 'service' ie QUOTE or CHART_EQUITY
