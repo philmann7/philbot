@@ -57,22 +57,8 @@ class Signaler:
         else:
             return 0
 
-    def update(self, service, data):
-        """
-        This updates the cloud values based on new data.
-        Takes data from msghandler as input.
-        Returns 0 if no change in cloud status
-        or (oldstatus, newstatus) otherwise.
-        Also returns the most recent price.
-        to be passed to cloudStatusToSignal
-        """
-        if service == "QUOTE":
-            newprice = data["LAST_PRICE"]
-        if service == "CHART_EQUITY":
-            newprice = data["CLOSE_PRICE"]
-        return self.updateCloud(newprice), newprice
 
-    def cloudStatusToSignal(status, newstatus):
+    def cloudStatusToSignal(self, status, newstatus):
         """
         Input should come from the update function
         Takes a change of status (oldstatus, newstatus)
@@ -138,3 +124,17 @@ class Signaler:
 
         # in case of confusion
         return 0
+
+    def update(self, service, data):
+        """
+        updates cloud and outputs signal if any, and newprice
+        """
+        if service == "QUOTE":
+            newprice = data["LAST_PRICE"]
+        elif service == "CHART_EQUITY":
+            newprice = data["CLOSE_PRICE"]
+        status_update = self.updateCloud(service, newprice)
+        if status_update:
+            oldstatus, newstatus = status_update
+            return self.cloudStatusToSignal(oldstatus, newstatus), newprice
+        return 0, newprice
