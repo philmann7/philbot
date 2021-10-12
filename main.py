@@ -44,7 +44,7 @@ async def message_handling(msg, signaler, msghandler, ordmngr):
         # for signaler in signalers if signaler.symbol == symbol
     ]
     ordermngupdate = [
-        ordmngr.update(symbol, signal, newprice)
+        ordmngr.updateFromQuote(symbol, signal, newprice)
         for (symbol, (signal, newprice)) in updates
     ]
     print(signaler)

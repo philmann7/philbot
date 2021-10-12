@@ -10,6 +10,7 @@ from tda.orders.options import option_buy_to_open_limit, option_sell_to_close_li
 from tda.utils import Utils
 
 from enum import Enum
+from datetime import datetime, timedelta
 
 
 class StopType(Enum):
@@ -145,6 +146,8 @@ class Position:
         self.stop = stop  # (StopType, offset)
         self.takeprofit = takeprofit
 
+        self.opened_time = datetime.now()
+
     # possibly move these into order manager
     # an initializer. for adding to a position use updatePositionFromQuote
 
@@ -207,6 +210,11 @@ class Position:
         Adds to the position
         """
         self.state = Signals.OPEN_OR_INCREASE
+
+        # don't increase if there are open orders
+        if "OPEN" in self.associated_orders.values():
+            return 0
+
         response = client.place_order(account_id,
                                       option_buy_to_open_market(
                                           self.contract, 1,)
@@ -256,6 +264,15 @@ class Position:
             case "OrderFill":
                 self.netpos += otherdata["OriginalQuantity"] if otherdata["OrderInstructions"] == "Buy" else \
                     -1 * otherdata["OriginalQuantity"]
+
+    def checkTimeouts(self, timeoutlength):
+        """
+        cancels orders that have been open and unfilled
+        for too long.
+        """
+        now = datetime.now()
+        for order_id in self.associated_orders:
+            if self.associated_orders[order_id] == "OPEN" and timedelta.total_seconds(now - self.opened_time) < timedelta
 
 
 class OrderManager:
