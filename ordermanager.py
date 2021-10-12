@@ -147,6 +147,7 @@ class Position:
         self.takeprofit = takeprofit
 
         self.opened_time = datetime.now()
+        self.closed_time = None
 
     # possibly move these into order manager
     # an initializer. for adding to a position use updatePositionFromQuote
@@ -179,6 +180,8 @@ class Position:
         Sells to close any contracts currently held.
         """
         self.state = Signals.EXIT
+        self.closed_time = datetime.now()
+
         # canceling orders
         for order_id in self.associated_orders:
             if self.associated_orders[order_id] not in {'PENDING_CANCEL', 'CANCELED', 'FILLED'. 'REPLACED', 'EXPIRED'}:
@@ -288,6 +291,12 @@ class OrderManager:
         signaler.update so update should be Signals.something
         or 0
         """
+        if symbol in self.currentpositions and self.currentpositions[symbol].closed_time:
+            now = datetime.now()
+            if timedelta.total_seconds(now-self.currentpositions[symbol].closed_time) > self.config.time_btwn_positions:
+                self.currentpositions.pop(symbol)
+            else:
+                return 0
         # this will be a cloud color change
         if signal == Signals.CLOSE and symbol in self.currentpositions:
             self.currentpositions[symbol].close(client, account_id)
