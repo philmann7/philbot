@@ -228,16 +228,14 @@ class Position:
         if signal == Signals.OPEN_OR_INCREASE and self.opened_on == Signals.OPEN:
             return self.increase()
 
-        stop_type, stop_offset = self.stop
-        stop_level = stopTypeToLevel(stop_type, cloud)
-        if price < stop_level + stop_offset:
+        cloud_color = cloud.status[0]
+        stop_level = StopType.stopTupleToLevel(self.stop, cloud)
+        if (price < stop_level and cloud_color == CloudColor.GREEN) or (price > stop_level and cloud_color == CloudColor.RED):
             return self.close()
 
-        philrate = self.netpos * standard_deviation * self.contractdelta
-
-        if price > self.takeprofit + (philrate * 0.25):
+        if (price > self.takeprofit + (standard_deviation * 0.25) and cloud_color == CloudColor.GREEN) or (price < self.takeprofit - (standard_deviation * 0.25) and cloud_color == CloudColor.RED):
             self.stop = (self.takeprofit, 0)
-            self.takeprofit = self.takeprofit + (philrate * 0.5)
+            self.takeprofit += (standard_deviation * 0.75) if cloud_color == CloudColor.GREEN else standard_deviation * -0.75()
 
     def updateFromAccountActivity(self, message_type, otherdata):
         """
