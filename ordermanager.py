@@ -185,6 +185,8 @@ class Position:
                     print{f"Exception canceling order (id: {order_id}:{self.associated_orders[order_id]}):\n{e}"}
         # selling to close out position (important that this is done
         # after canceling so sell orders don't get canceled)
+        if self.netpos < 1:
+            return 0
         response = client.place_order(account_id,
                                       option_sell_to_close_market(
                                           self.contract, self.netpos,)
@@ -330,20 +332,6 @@ class OrderManager:
         )
         return highest_delta_contract
 
-    def open(
-        self, symbol, contract, limit, takeprofit, stop, state_signal,
-    ):
-        self.currentpositions[symbol] = Position(
-            contract, limit, takeprofit, stop, state_signal
-        )
-        self.currentpositions[symbol].open()
-
-    def close():
-        pass
-
-    def increase():
-        pass
-
     def openPositionFromSignal(
         self, symbol, signal, client, cloud, price,
     ):
@@ -351,12 +339,14 @@ class OrderManager:
         standard_dev = getStdDevForSymbol(client, symbol, period)
 
         stop, takeprofit = levelSet(price, standard_dev, cloud)
+        stop_level = StopType.stopTupleToLevel(stop, cloud)
 
         contract = getContractFromChain(
-            symbol, price, stop, takeprofit, standard_dev, cloud.status[0]
+            symbol, price, stop_level, takeprofit, standard_dev, cloud.status[0]
         )
         limit = contract["ask"] + self.config.limit_padding
 
-        self.open(
-            symbol, contract, limit, takeprofit, stop, signal,
+        self.currentpositions[symbol] = Position(
+            contract["symbol"], takeprofit, stop, state_signal
         )
+        .open(client, account_id, limit)
