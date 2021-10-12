@@ -111,6 +111,8 @@ class OrderManagerConfig:
         min_risk_reward_ratio,
         strike_count,
         limit_padding,
+        time_btwn_positions,
+        order_timeout_length,
     ):
         self.stdev_period = (
             stdev_period  # period of calculation of the standard deviation
@@ -128,6 +130,8 @@ class OrderManagerConfig:
         self.strike_count = strike_count  # number of strikes to ask the API for
         self.limit_padding = limit_padding  # if set to 0.01 the limit buy will
         # be set at ask+.01
+        self.time_btwn_positions = time_btwn_positions
+        self.order_timeout_length = order_timeout_length
 
 
 class Position:
