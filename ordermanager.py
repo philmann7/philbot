@@ -317,7 +317,8 @@ class OrderManager:
             self.currentpositions[symbol].checkTimeouts(
                 client, account_id, self.config.order_timeout_length)
 
-            standard_deviation = getStdDevForSymbol(client, symbol, self.config.stdev_period)
+            standard_deviation = getStdDevForSymbol(
+                client, symbol, self.config.stdev_period)
             self.currentpositions[symbol].updatePositionFromQuote(
                 cloud, signal, newprice, standard_deviation)
 
@@ -381,7 +382,8 @@ class OrderManager:
     def openPositionFromSignal(
         self, symbol, signal, client, cloud, price,
     ):
-        standard_dev = getStdDevForSymbol(client, symbol, self.config.stdev_period)
+        standard_dev = getStdDevForSymbol(
+            client, symbol, self.config.stdev_period)
 
         stop, takeprofit = levelSet(price, standard_dev, cloud)
         stop_level = StopType.stopTupleToLevel(stop, cloud)
