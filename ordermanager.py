@@ -12,6 +12,9 @@ from tda.utils import Utils
 from enum import Enum
 from datetime import datetime, timedelta
 
+import httpx
+import time
+
 
 class StopType(Enum):
     EMALong, EMAShort = range(2)
@@ -165,12 +168,18 @@ class Position:
         This method should not be used to add to a position, for
         that use updatePositionFromQuote and increase.
         """
-        response = client.place_order(account_id,
-                                      option_buy_to_open_limit(
-                                          self.contract, 1, limit)
-                                      .build()
-                                      )
-        assert r.status_code == httpx.codes.OK, r.raise_for_status()
+        while True:
+            try:
+                response = client.place_order(account_id,
+                                              option_buy_to_open_limit(
+                                                  self.contract, 1, limit)
+                                              .build()
+                                              )
+                response.raise_for_status()
+                break
+            except Exception as e:
+                print(e)
+                time.sleep(0.5)
         order_id = Utils(client, account_id).extract_order_id(response)
         # order_id is potentially None
         if not order_id:
@@ -197,12 +206,20 @@ class Position:
         # after canceling so sell orders don't get canceled)
         if self.netpos < 1:
             return 0
-        response = client.place_order(account_id,
-                                      option_sell_to_close_market(
-                                          self.contract, self.netpos,)
-                                      .build()
-                                      )
-        assert r.status_code == httpx.codes.OK, r.raise_for_status()
+
+        while True:
+            try:
+                response = client.place_order(account_id,
+                                              option_sell_to_close_market(
+                                                  self.contract, self.netpos)
+                                              .build()
+                                              )
+                response.raise_for_status()
+                break
+            except Exception as e:
+                print(e)
+                time.sleep(0.5)
+
         order_id = Utils(client, account_id).extract_order_id(response)
         # order_id is potentially None
         if not order_id:
@@ -222,12 +239,19 @@ class Position:
         if "OPEN" in self.associated_orders.values():
             return 0
 
-        response = client.place_order(account_id,
-                                      option_buy_to_open_market(
-                                          self.contract, 1,)
-                                      .build()
-                                      )
-        assert r.status_code == httpx.codes.OK, r.raise_for_status()
+        while True:
+            try:
+                response = client.place_order(account_id,
+                                              option_buy_to_open_market(
+                                                  self.contract, 1,)
+                                              .build()
+                                              )
+                response.raise_for_status()
+                break
+            except Exception as e:
+                print(e)
+                time.sleep(0.5)
+
         order_id = Utils(client, account_id).extract_order_id(response)
         # order_id is potentially None
         if not order_id:
