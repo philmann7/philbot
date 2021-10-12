@@ -272,14 +272,18 @@ class Position:
                 self.netpos += otherdata["OriginalQuantity"] if otherdata["OrderInstructions"] == "Buy" else \
                     -1 * otherdata["OriginalQuantity"]
 
-    def checkTimeouts(self, timeoutlength):
+    def checkTimeouts(self, client, account_id, timeoutlength):
         """
         cancels orders that have been open and unfilled
         for too long.
         """
         now = datetime.now()
         for order_id in self.associated_orders:
-            if self.associated_orders[order_id] == "OPEN" and timedelta.total_seconds(now - self.opened_time) < timedelta
+            if self.associated_orders[order_id] == "OPEN" and timedelta.total_seconds(now - self.opened_time) < timeoutlength:
+                try:
+                    client.cancel_order(account_id, order_id)
+                except Exception as e:
+                    print{f"Exception canceling order (id: {order_id}:{self.associated_orders[order_id]}):\n{e}"}
 
 
 class OrderManager:
