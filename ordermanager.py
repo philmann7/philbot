@@ -230,12 +230,15 @@ class Position:
 
         cloud_color = cloud.status[0]
         stop_level = StopType.stopTupleToLevel(self.stop, cloud)
-        if (price < stop_level and cloud_color == CloudColor.GREEN) or (price > stop_level and cloud_color == CloudColor.RED):
+        if (price < stop_level and cloud_color == CloudColor.GREEN) or (
+                price > stop_level and cloud_color == CloudColor.RED):
             return self.close()
 
-        if (price > self.takeprofit + (standard_deviation * 0.25) and cloud_color == CloudColor.GREEN) or (price < self.takeprofit - (standard_deviation * 0.25) and cloud_color == CloudColor.RED):
+        if (price > self.takeprofit + (standard_deviation * 0.25) and cloud_color == CloudColor.GREEN) or (
+                price < self.takeprofit - (standard_deviation * 0.25) and cloud_color == CloudColor.RED):
             self.stop = (self.takeprofit, 0)
-            self.takeprofit += (standard_deviation * 0.75) if cloud_color == CloudColor.GREEN else standard_deviation * -0.75()
+            self.takeprofit += (standard_deviation *
+                                0.75) if cloud_color == CloudColor.GREEN else (standard_deviation * -0.75)
 
     def updateFromAccountActivity(self, message_type, otherdata):
         """
