@@ -42,8 +42,10 @@ class Signaler:
         cloud class.
         """
         status = self.cloud.status
-        self.cloud.shortEMA = expMovAvg([self.historical["short"], newprice], ema_period)
-        self.cloud.longEMA = expMovAvg([self.historical["long"], newprice], ema_period)
+        self.cloud.shortEMA = expMovAvg(
+            [self.historical["short"], newprice], ema_period)
+        self.cloud.longEMA = expMovAvg(
+            [self.historical["long"], newprice], ema_period)
 
         if service == "CHART_EQUITY":
             self.historical["short"] = self.cloud.shortEMA
