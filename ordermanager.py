@@ -203,7 +203,7 @@ class Position:
                     client.cancel_order(account_id, order_id)
                 except Exception as e:
                     print(
-                        {f"Exception canceling order (id: {order_id}:{self.associated_orders[order_id]}):\n{e}"})
+                        f"Exception canceling order (id: {order_id}:{self.associated_orders[order_id]}):\n{e}")
         # selling to close out position (important that this is done
         # after canceling so sell orders don't get canceled)
         if self.netpos < 1:
@@ -311,7 +311,7 @@ class Position:
                     client.cancel_order(account_id, order_id)
                 except Exception as e:
                     print(
-                        {f"Exception canceling order (id: {order_id}:{self.associated_orders[order_id]}):\n{e}"})
+                        f"Exception canceling order (id: {order_id}:{self.associated_orders[order_id]}):\n{e}")
 
 
 class OrderManager:
