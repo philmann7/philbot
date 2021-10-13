@@ -19,12 +19,17 @@ class Signaler:
         self,
         client,
         symbol,
+        shortEMAlength,
+        longEMAlength,
     ):
         history = gethistory(client, symbol)
         closevals = [candle["close"] for candle in history]
 
-        shortEMA = expMovAvg(closevals.copy(), 9)
-        longEMA = expMovAvg(closevals.copy(), 21)
+        self.shortEMAlength = shortEMAlength
+        self.longEMAlength = longEMAlength
+
+        shortEMA = expMovAvg(closevals.copy(), shortEMAlength)
+        longEMA = expMovAvg(closevals.copy(), longEMAlength)
         currentprice = closevals[-1]
 
         # from completed candles, only change on new completed candle
@@ -32,7 +37,7 @@ class Signaler:
         self.symbol = symbol
         self.cloud = Cloud(shortEMA, longEMA, currentprice)
 
-    def updateCloud(self, service, newprice, ema_period):
+    def updateCloud(self, service, newprice):
         """
         Update EMAs and cloud based on new data.
         To be called after recieving new quote.
@@ -44,9 +49,9 @@ class Signaler:
         """
         status = self.cloud.status
         self.cloud.shortEMA = expMovAvg(
-            [self.historical["short"], newprice], ema_period)
+            [self.historical["short"], newprice], self.shortEMAlength)
         self.cloud.longEMA = expMovAvg(
-            [self.historical["long"], newprice], ema_period)
+            [self.historical["long"], newprice], self.longEMAlength)
 
         newstatus = self.cloud.ema_cloud_status(newprice)
         self.cloud.status = newstatus
@@ -123,7 +128,7 @@ class Signaler:
         # in case of confusion
         return 0
 
-    def update(self, service, data, ema_period):
+    def update(self, service, data,):
         """
         updates cloud and outputs signal if any, and newprice
         """
@@ -138,12 +143,12 @@ class Signaler:
         elif service == "CHART_EQUITY":
             close_price = data["CLOSE_PRICE"]
             self.historical["short"] = expMovAvg(
-                [self.historical["short"], close_price], ema_period)
+                [self.historical["short"], close_price], self.shortEMAlength)
             self.historical["long"] = expMovAvg(
-                [self.historical["long"], close_price], ema_period)
+                [self.historical["long"], close_price], self.longEMAlength)
             return 0, None
 
-        status_update = self.updateCloud(service, newprice, ema_period)
+        status_update = self.updateCloud(service, newprice,)
         if status_update:
             oldstatus, newstatus = status_update
             return self.cloudStatusToSignal(oldstatus, newstatus), newprice
