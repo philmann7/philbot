@@ -136,6 +136,7 @@ class Signaler:
             except KeyError as e:
                 print(f"No new price from quote stream: {e}")
                 print(data)
+                print("-----------------------------------")
                 return 0, None
         elif service == "CHART_EQUITY":
             newprice = data["CLOSE_PRICE"]

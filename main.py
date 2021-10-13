@@ -93,7 +93,7 @@ async def main():
         max_spread=0.05,
         max_loss=.15,
         min_risk_reward_ratio=2.1,
-        strike_count=5,
+        strike_count=3,
         limit_padding=.01,
         time_btwn_positions=300,
         order_timeout_length=30,
