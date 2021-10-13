@@ -5,6 +5,7 @@ import asyncio
 import datetime
 import json
 import re
+import time
 
 from tda.client import Client
 import httpx
@@ -14,19 +15,21 @@ def gethistory(client, symbol):
     """
     returns today's minute-by-minute OHCLV history
     """
-    resp = client.get_price_history(
-        symbol,
-        period_type=Client.PriceHistory.PeriodType.DAY,
-        period=Client.PriceHistory.Period.ONE_DAY,
-        frequency_type=Client.PriceHistory.FrequencyType.MINUTE,
-        frequency=Client.PriceHistory.Frequency.EVERY_MINUTE,
-        end_datetime=datetime.datetime.today() + datetime.timedelta(days=1),
-    )
-
-    if resp.status_code != httpx.codes.OK:
-        return 0
-
-    history = resp.json()
+    while True:
+        try:
+            resp = client.get_price_history(
+                symbol,
+                period_type=Client.PriceHistory.PeriodType.DAY,
+                period=Client.PriceHistory.Period.ONE_DAY,
+                frequency_type=Client.PriceHistory.FrequencyType.MINUTE,
+                frequency=Client.PriceHistory.Frequency.EVERY_MINUTE,
+                end_datetime=datetime.datetime.today() + datetime.timedelta(days=1),
+            )
+            resp.raise_for_status()
+            break
+        except Exception as e:
+            print(e)
+            time.sleep(0.5)
 
     return history["candles"]
 
@@ -60,15 +63,19 @@ def getOptionChain(
     returned as-is it's nested in a way that can
     be inconvenient. see flatten()
     """
-    resp = client.get_option_chain(
-        symbol,
-        strike_count=strike_count,
-        from_date=datetime.datetime.today(),
-        to_date=datetime.datetime.today() + datetime.timedelta(days=dte),
-    )
-
-    if resp.status_code != httpx.codes.OK:
-        return 0
+    while True:
+        try:
+            resp = client.get_option_chain(
+                symbol,
+                strike_count=strike_count,
+                from_date=datetime.datetime.today(),
+                to_date=datetime.datetime.today() + datetime.timedelta(days=dte),
+            )
+            resp.raise_for_status()
+            break
+        except Exception as e:
+            print(e)
+            time.sleep(0.5)
 
     chain = resp.json()
 
