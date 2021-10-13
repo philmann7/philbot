@@ -32,7 +32,7 @@ class Signaler:
         self.symbol = symbol
         self.cloud = Cloud(shortEMA, longEMA, currentprice)
 
-    def updateCloud(self, service, newprice):
+    def updateCloud(self, service, newprice, ema_period):
         """
         Update EMAs and cloud based on new data.
         Called by update and passes 0 if cloud status is
@@ -42,8 +42,8 @@ class Signaler:
         cloud class.
         """
         status = self.cloud.status
-        self.cloud.shortEMA = expMovAvg([self.historical["short"], newprice])
-        self.cloud.longEMA = expMovAvg([self.historical["long"], newprice])
+        self.cloud.shortEMA = expMovAvg([self.historical["short"], newprice], ema_period)
+        self.cloud.longEMA = expMovAvg([self.historical["long"], newprice], ema_period)
 
         if service == "CHART_EQUITY":
             self.historical["short"] = self.cloud.shortEMA
@@ -124,7 +124,7 @@ class Signaler:
         # in case of confusion
         return 0
 
-    def update(self, service, data):
+    def update(self, service, data, ema_period):
         """
         updates cloud and outputs signal if any, and newprice
         """
@@ -132,7 +132,7 @@ class Signaler:
             newprice = data["LAST_PRICE"]
         elif service == "CHART_EQUITY":
             newprice = data["CLOSE_PRICE"]
-        status_update = self.updateCloud(service, newprice)
+        status_update = self.updateCloud(service, newprice, ema_period)
         if status_update:
             oldstatus, newstatus = status_update
             return self.cloudStatusToSignal(oldstatus, newstatus), newprice

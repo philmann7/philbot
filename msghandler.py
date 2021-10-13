@@ -37,7 +37,7 @@ class MessageHandler:
             relevantdata = {
                 field: content[field]
                 for field in content
-                if field in self.fields[service]
+                if field in self.fields
             }
 
             # dict update operator

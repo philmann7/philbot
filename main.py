@@ -39,7 +39,7 @@ def message_handling(msg, signaler, msghandler, ordmngr):
     # so multiple symbols will break this
     updates = [
         (symbol, signaler.update(
-            service, msghandler.last_messages[symbol]))
+            service, msghandler.last_messages[symbol], ordmngr.config.stdev_period))
         for (symbol, service) in newdatafor
         # for signaler in signalers if signaler.symbol == symbol
     ]
@@ -71,7 +71,7 @@ async def read_stream(msghandler, signaler, ordmngr):
     stream_client.add_account_activity_handler(
         lambda msg: message_handling(msg, signaler, msghandler, ordmngr)
     )
-    await stream_client.account_activity_subs()
+    await stream_client.account_activity_sub()
 
     while True:
         await stream_client.handle_message()
