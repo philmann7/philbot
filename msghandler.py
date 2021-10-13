@@ -26,6 +26,9 @@ class MessageHandler:
                 symbol = msg_data["Symbol"].split("_")[0]
                 newdatafor.append(
                     ((symbol, msg_type, msg_data), "ACCOUNT_ACTIVITY"))
+                print(f"{symbol}:{msg_type}")
+                [print(item) for item in msg_data.items()]
+                print("-------------------------------------")
             return newdatafor
 
         # should be one content for each symbol
@@ -40,4 +43,8 @@ class MessageHandler:
             # dict update operator
             self.last_messages[symbol] |= relevantdata
             newdatafor.append((symbol, service))
+
+            print(f"New quote for {symbol}")
+            [print(item) for item in relevantdata.items()]
+            print("-------------------------------------")
         return newdatafor
