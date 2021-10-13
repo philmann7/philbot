@@ -34,6 +34,10 @@ class Signaler:
 
         # from completed candles, only change on new completed candle
         self.historical = {"short": shortEMA, "long": longEMA}
+        self.first_chart_equity = True  # so as to ignore the first
+        # candle from the chart equity stream.
+        # if not ignored would add redundant data to ema calculations
+        # since the close of the current candle should be covered by gethistory
         self.symbol = symbol
         self.cloud = Cloud(shortEMA, longEMA, currentprice)
 
@@ -142,6 +146,9 @@ class Signaler:
                 return 0, None
 
         elif service == "CHART_EQUITY":
+            if self.first_chart_equity:
+                self.first_chart_equity = False
+                return 0, None
             close_price = data["CLOSE_PRICE"]
             self.historical["short"] = expMovAvg(
                 [self.historical["short"], close_price], self.shortEMAlength)
