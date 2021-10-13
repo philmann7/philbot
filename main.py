@@ -49,6 +49,9 @@ def message_handling(msg, signaler, msghandler, ordmngr):
                 os.getenv("account_number")), signaler.cloud, symbol, signal, newprice)
         for (symbol, (signal, newprice)) in updates
     ]
+    print(f"Short EMA:{signaler.cloud.shortEMA}\n" + f"Long EMA:{signaler.cloud.longEMA}\n")
+    print(f"Cloud status: {signaler.cloud.status}")
+    [print(pos) for pos in ordmngr.currentpositions.values()]
 
 
 async def read_stream(msghandler, signaler, ordmngr):

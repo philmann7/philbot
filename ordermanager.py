@@ -185,6 +185,7 @@ class Position:
         if not order_id:
             return 0
         self.associated_orders[order_id] = "OPEN"
+        print(f"Order sent for {self.contract}")
         return order_id
 
     def close(self, client, account_id):
@@ -195,6 +196,7 @@ class Position:
         self.state = Signals.EXIT
         self.closed_time = datetime.now()
 
+        print(f"Closing postion {self.contract}")
         # canceling orders
         for order_id in self.associated_orders:
             if self.associated_orders[order_id] not in {
@@ -259,6 +261,7 @@ class Position:
         if not order_id:
             return 0
         self.associated_orders[order_id] = "OPEN"
+        print(f"Adding to position {self.contract}")
         return order_id
 
     def updatePositionFromQuote(
