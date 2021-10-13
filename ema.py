@@ -35,13 +35,28 @@ class CloudPriceLocation(Enum):
     # for example ABOVE means the price is above the cloud
     ABOVE, INSIDE, BELOW = range(3)
 
+def determine_cloud_status(currentprice, shortEMA, longEMA):
+    # determine color of cloud
+    if shortEMA >= longEMA:
+        color = CloudColor.GREEN
+    else:
+        color = CloudColor.RED
+    # determine location of cloud
+    if currentprice > shortEMA and currentprice > longEMA:
+        location = CloudPriceLocation.ABOVE
+    if currentprice < shortEMA and currentprice < longEMA:
+        location = CloudPriceLocation.BELOW
+    else:
+        location = CloudPriceLocation.INSIDE
+
+    return (color, location)
 
 class Cloud:
     def __init__(self, shortEMA, longEMA, currentprice):
         self.shortEMA = shortEMA
         self.longEMA = longEMA
         # self.status is in the form (CloudColor, CloudPriceLocation)
-        self.status = ema_cloud_status(currentprice)
+        self.status = determine_cloud_status(currentprice, shortEMA, longEMA)
 
     # this will help indicate if there is a change in status or not
     def __eq__(self, other):
@@ -52,20 +67,7 @@ class Cloud:
     # is above longEMA, red ie bearish otherwise)
     # and the location of the price relative to the cloud
     def ema_cloud_status(self, currentprice):
-        # determine color of cloud
-        if self.shortEMA >= self.longEMA:
-            color = CloudColor.GREEN
-        else:
-            color = CloudColor.RED
-        # determine location of cloud
-        if currentprice > self.shortEMA and currentprice > self.longEMA:
-            location = CloudPriceLocation.ABOVE
-        if currentprice < self.shortEMA and currentprice < self.longEMA:
-            location = CloudPriceLocation.BELOW
-        else:
-            location = CloudPriceLocation.INSIDE
-
-        return (color, location)
+        return determine_cloud_status(currentprice, self.shortEMA, self.longEMA)
 
 
 if __name__ == "__main__":

@@ -31,6 +31,7 @@ def gethistory(client, symbol):
             print(e)
             time.sleep(0.5)
 
+    history = resp.json()
     return history["candles"]
 
 
