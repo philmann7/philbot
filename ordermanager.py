@@ -421,6 +421,8 @@ class OrderManager:
         contract = self.getContractFromChain(
             client, symbol, take_profit, stop_level, price, cloud.status[0],
         )
+        if not contract:
+            print("No suitable contracts")
         limit = contract["ask"] + self.config.limit_padding
 
         self.currentpositions[symbol] = Position(
