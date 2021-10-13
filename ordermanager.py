@@ -111,6 +111,7 @@ class OrderManagerConfig:
         min_contract_price,
         max_spread,
         max_loss,
+        min_loss,
         min_risk_reward_ratio,
         strike_count,
         limit_padding,
@@ -128,6 +129,7 @@ class OrderManagerConfig:
         # on price of contract so use option pricing convention ie .10 for 10
         # dollars
         self.max_loss = max_loss
+        self.min_loss = min_loss
         # profit/loss expected_move_to_profit/expected_move_to_stop
         self.min_risk_reward_ratio = min_risk_reward_ratio
         self.strike_count = strike_count  # number of strikes to ask the API for
@@ -400,14 +402,18 @@ class OrderManager:
             contract
             for contract in contracts
             if abs(contract["delta"]) * expected_move_to_stop < self.config.max_loss
+            and abs(contract["delta"]) * expected_move_to_stop >= self.config.min_loss
             and expected_move_to_profit / expected_move_to_stop > self.config.min_risk_reward_ratio
         ]
 
-        # there can only be one
-        highest_delta_contract = sorted(
-            contracts, key=lambda contract: abs(contract["delta"])
-        )[-1]
-        return highest_delta_contract
+        if contracts:
+            # there can only be one
+            highest_delta_contract = sorted(
+                contracts, key=lambda contract: abs(contract["delta"])
+            )[-1]
+            return highest_delta_contract
+        else:
+            return contracts  # None
 
     def openPositionFromSignal(
         self, symbol, signal, client, cloud, price,

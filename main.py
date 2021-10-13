@@ -96,6 +96,7 @@ async def main():
         min_contract_price=0.80,
         max_spread=0.05,
         max_loss=.15,
+        min_loss=.10,
         min_risk_reward_ratio=2.1,
         strike_count=3,
         limit_padding=.01,
