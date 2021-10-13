@@ -19,13 +19,13 @@ class MessageHandler:
         service = msg["service"]
         newdatafor = []
 
-        if service == "ACCOUNT_ACTIVITY":
+        if service == "ACCT_ACTIVITY":
             for content in msg["content"]:
                 msg_type = content['MESSAGE_TYPE']
                 msg_data = AccountActivityXMLParse().parse(msg["MESSAGE_DATA"])
                 symbol = msg_data["Symbol"].split("_")[0]
                 newdatafor.append(
-                    ((symbol, msg_type, msg_data), "ACCOUNT_ACTIVITY"))
+                    ((symbol, msg_type, msg_data), "ACCT_ACTIVITY"))
                 print(f"{symbol}:{msg_type}")
                 [print(item) for item in msg_data.items()]
                 print("-------------------------------------")
