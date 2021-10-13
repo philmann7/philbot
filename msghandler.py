@@ -20,16 +20,13 @@ class MessageHandler:
         newdatafor = []
 
         if service == "ACCOUNT_ACTIVITY":
-            return [(content, "ACCOUNT_ACTIVITY")
-                    for content in msg["content"]]
-
-        if service == "ACCOUNT_ACTIVITY":
             for content in msg["content"]:
                 msg_type = content['MESSAGE_TYPE']
                 msg_data = AccountActivityXMLParse().parse(msg["MESSAGE_DATA"])
                 symbol = msg_data["Symbol"].split("_")[0]
                 newdatafor.append(
                     ((symbol, msg_type, msg_data), "ACCOUNT_ACTIVITY"))
+            return newdatafor
 
         # should be one content for each symbol
         for content in msg["content"]:

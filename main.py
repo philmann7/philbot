@@ -49,7 +49,6 @@ def message_handling(msg, signaler, msghandler, ordmngr):
                 os.getenv("account_number")), cloud, symbol, signal, newprice)
         for (symbol, (signal, newprice)) in updates
     ]
-    print(signaler)
 
 
 async def read_stream(msghandler, signaler, ordmngr):
@@ -67,7 +66,7 @@ async def read_stream(msghandler, signaler, ordmngr):
     stream_client.add_level_one_equity_handler(
         lambda msg: message_handling(msg, signaler, msghandler, ordmngr)
     )
-    await stream_client.level_one_equity_subs(["AAPL"])
+    await stream_client.level_one_equity_subs(["SPY"])
 
     stream_client.add_account_activity_handler(
         lambda msg: message_handling(msg, signaler, msghandler, ordmngr)
