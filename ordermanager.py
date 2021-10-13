@@ -406,7 +406,7 @@ class OrderManager:
         # there can only be one
         highest_delta_contract = sorted(
             contracts, key=lambda contract: abs(contract["delta"])
-        )
+        )[-1]
         return highest_delta_contract
 
     def openPositionFromSignal(
