@@ -353,7 +353,7 @@ class OrderManager:
                 cloud, signal, newprice, standard_deviation)
 
         elif signal and signal != Signals.CLOSE:
-            self.currentpositions[symbol] = self.openPositionFromSignal(
+            self.openPositionFromSignal(
                 symbol, signal, client, cloud, newprice,
             )
 
@@ -423,6 +423,7 @@ class OrderManager:
         )
         if not contract:
             print("No suitable contracts")
+            return None
         limit = contract["ask"] + self.config.limit_padding
 
         self.currentpositions[symbol] = Position(
