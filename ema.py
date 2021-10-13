@@ -45,7 +45,7 @@ def determine_cloud_status(currentprice, shortEMA, longEMA):
     # determine location of cloud
     if currentprice > shortEMA and currentprice > longEMA:
         location = CloudPriceLocation.ABOVE
-    if currentprice < shortEMA and currentprice < longEMA:
+    elif currentprice < shortEMA and currentprice < longEMA:
         location = CloudPriceLocation.BELOW
     else:
         location = CloudPriceLocation.INSIDE
