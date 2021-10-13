@@ -427,6 +427,6 @@ class OrderManager:
         limit = contract["ask"] + self.config.limit_padding
 
         self.currentpositions[symbol] = Position(
-            contract["symbol"], takeprofit, stop, state_signal
+            contract["symbol"], takeprofit, stop, signal
         )
         self.currentpositions[symbol].open(client, account_id, limit)
