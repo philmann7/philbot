@@ -419,7 +419,7 @@ class OrderManager:
         stop_level = StopType.stopTupleToLevel(stop, cloud)
 
         contract = self.getContractFromChain(
-            client, symbol, take_profit, stop_level, price, cloud.status[0],
+            client, symbol, takeprofit, stop_level, price, cloud.status[0],
         )
         if not contract:
             print("No suitable contracts")
