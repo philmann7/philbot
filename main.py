@@ -29,7 +29,7 @@ def message_handling(msg, signaler, msghandler, ordmngr):
     # or [(content, service),...] in the case of account activity
     newdatafor = msghandler.handle(msg)
 
-    if newdatafor[0][1] == "ACCT_ACTIVITY":
+    if newdatafor and newdatafor[0][1] == "ACCT_ACTIVITY":
         return [
             ordmngr.updateFromAccountActivity(symbol, msg_type, msg_data)
             for ((symbol, msg_type, msg_data), service) in newdatafor

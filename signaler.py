@@ -131,7 +131,11 @@ class Signaler:
         updates cloud and outputs signal if any, and newprice
         """
         if service == "QUOTE":
-            newprice = data["LAST_PRICE"]
+            try:
+                newprice = data["LAST_PRICE"]
+            except KeyError as e:
+                print(f"No new price from quote stream: {e}")
+                return 0, None
         elif service == "CHART_EQUITY":
             newprice = data["CLOSE_PRICE"]
         status_update = self.updateCloud(service, newprice, ema_period)

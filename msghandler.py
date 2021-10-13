@@ -22,7 +22,9 @@ class MessageHandler:
         if service == "ACCT_ACTIVITY":
             for content in msg["content"]:
                 msg_type = content['MESSAGE_TYPE']
-                msg_data = AccountActivityXMLParse().parse(msg["MESSAGE_DATA"])
+                if msg_type == "SUBSCRIBED":
+                    continue
+                msg_data = AccountActivityXMLParse().parse(content["MESSAGE_DATA"])
                 symbol = msg_data["Symbol"].split("_")[0]
                 newdatafor.append(
                     ((symbol, msg_type, msg_data), "ACCT_ACTIVITY"))
