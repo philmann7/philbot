@@ -5,6 +5,7 @@ class MessageHandler:
     def __init__(self, fields=None):
         self.fields = fields or {
             "BID_PRICE",
+            "LAST_PRICE",
             "ASK_PRICE",
             "key",
             "OPEN_PRICE",

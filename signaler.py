@@ -130,6 +130,7 @@ class Signaler:
         if service == "QUOTE":
             try:
                 newprice = data["LAST_PRICE"]
+                print(f"New Quote: {newprice}")
             except KeyError as e:
                 print(f"No new price from quote stream: {e}")
                 print("-----------------------------------")
