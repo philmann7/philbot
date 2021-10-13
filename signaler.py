@@ -137,8 +137,10 @@ class Signaler:
                 return 0, None
         elif service == "CHART_EQUITY":
             close_price = data["CLOSE_PRICE"]
-            self.historical["short"] = expMovAvg([self.historical["short"], close_price], ema_period)
-            self.historical["long"] = expMovAvg([self.historical["long"], close_price], ema_period)
+            self.historical["short"] = expMovAvg(
+                [self.historical["short"], close_price], ema_period)
+            self.historical["long"] = expMovAvg(
+                [self.historical["long"], close_price], ema_period)
             return 0, None
 
         status_update = self.updateCloud(service, newprice, ema_period)
