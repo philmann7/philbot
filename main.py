@@ -83,7 +83,11 @@ async def read_stream(msghandler, signaler, ordmngr):
 
 async def main():
     msghandler = MessageHandler()
-    signaler = Signaler(client, "SPY")
+
+    shortEMALength = 9
+    longEMALength = 21
+    signaler = Signaler(client, "SPY", shortEMALength, longEMALength)
+
     ordermanager_config = OrderManagerConfig(
         stdev_period=50,
         mindte=2,
