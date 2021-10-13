@@ -39,7 +39,7 @@ def message_handling(msg, signaler, msghandler, ordmngr):
     # so multiple symbols will break this
     updates = [
         (symbol, signaler.update(
-            service, msghandler.last_messages[symbol], ordmngr.config.stdev_period))
+            service, msghandler.last_messages[symbol],))
         for (symbol, service) in newdatafor
         # for signaler in signalers if signaler.symbol == symbol
     ]
