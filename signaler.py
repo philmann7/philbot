@@ -35,6 +35,7 @@ class Signaler:
     def updateCloud(self, service, newprice, ema_period):
         """
         Update EMAs and cloud based on new data.
+        To be called after recieving new quote.
         Called by update and passes 0 if cloud status is
         unchanged and (oldstatus, newstatus) otherwise
 
@@ -46,10 +47,6 @@ class Signaler:
             [self.historical["short"], newprice], ema_period)
         self.cloud.longEMA = expMovAvg(
             [self.historical["long"], newprice], ema_period)
-
-        if service == "CHART_EQUITY":
-            self.historical["short"] = self.cloud.shortEMA
-            self.historical["long"] = self.cloud.longEMA
 
         newstatus = self.cloud.ema_cloud_status(newprice)
         self.cloud.status = newstatus
@@ -135,11 +132,14 @@ class Signaler:
                 newprice = data["LAST_PRICE"]
             except KeyError as e:
                 print(f"No new price from quote stream: {e}")
-                print(data)
                 print("-----------------------------------")
                 return 0, None
         elif service == "CHART_EQUITY":
-            newprice = data["CLOSE_PRICE"]
+            close_price = data["CLOSE_PRICE"]
+            self.historical["short"] = expMovAvg([self.historical["short"], close_price], ema_period)
+            self.historical["long"] = expMovAvg([self.historical["long"], close_price], ema_period)
+            return 0, None
+
         status_update = self.updateCloud(service, newprice, ema_period)
         if status_update:
             oldstatus, newstatus = status_update
