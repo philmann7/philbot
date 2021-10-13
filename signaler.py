@@ -140,6 +140,7 @@ class Signaler:
                 print(f"No new price from quote stream: {e}")
                 print("-----------------------------------")
                 return 0, None
+
         elif service == "CHART_EQUITY":
             close_price = data["CLOSE_PRICE"]
             self.historical["short"] = expMovAvg(

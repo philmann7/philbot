@@ -389,8 +389,8 @@ class OrderManager:
             for contract in contracts
             if contract["ask"] - contract["bid"] <= self.config.max_spread
             and contract["putCall"] == putCall
-            and contract["daysToExpiration"] >= mindte
-            and contract["daysToExpiration"] <= maxdte
+            and contract["daysToExpiration"] >= self.config.mindte
+            and contract["daysToExpiration"] <= self.config.maxdte
             and contract["ask"] > self.config.min_contract_price
             and contract["ask"] < self.config.max_contract_price
         ]
