@@ -24,7 +24,8 @@ class MessageHandler:
                 msg_type = content['MESSAGE_TYPE']
                 if msg_type == "SUBSCRIBED":
                     continue
-                msg_data = AccountActivityXMLParse().parse(content["MESSAGE_DATA"])
+                msg_data = AccountActivityXMLParse().parse(
+                    content["MESSAGE_DATA"])
                 symbol = msg_data["Symbol"].split("_")[0]
                 newdatafor.append(
                     ((symbol, msg_type, msg_data), "ACCT_ACTIVITY"))
