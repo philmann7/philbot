@@ -11,7 +11,7 @@ from botutils import gethistory
 
 
 class Signals(Enum):
-    OPEN, OPEN_OR_INCREASE, CLOSE = range(3)
+    OPEN, OPEN_OR_INCREASE, CLOSE, EXIT = range(4)
 
 
 class Signaler:
