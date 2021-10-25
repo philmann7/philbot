@@ -27,7 +27,11 @@ stream_client = StreamClient(
 def message_handling(msg, signaler, msghandler, ordmngr):
     # newdatafor in the form of [(symbol, service),...]
     # or [(content, service),...] in the case of account activity
-    newdatafor = msghandler.handle(msg)
+    try:
+        newdatafor = msghandler.handle(msg)
+    except KeyError as e:
+        print(msg)
+        print(e)
 
     if newdatafor and newdatafor[0][1] == "ACCT_ACTIVITY":
         return [
