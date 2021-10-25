@@ -32,6 +32,7 @@ def message_handling(msg, signaler, msghandler, ordmngr):
     except KeyError as e:
         print(msg)
         print(e)
+        return None
 
     if newdatafor and newdatafor[0][1] == "ACCT_ACTIVITY":
         return [
