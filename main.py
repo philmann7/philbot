@@ -95,12 +95,12 @@ async def main():
         max_contract_price=2.0,
         min_contract_price=0.80,
         max_spread=0.05,
-        max_loss=.15,
+        max_loss=.20,
         min_loss=.10,
         min_risk_reward_ratio=2.1,
-        strike_count=3,
+        strike_count=5,
         limit_padding=.01,
-        time_btwn_positions=300,
+        time_btwn_positions=15,
         order_timeout_length=30,
     )
     ordmngr = OrderManager(ordermanager_config)

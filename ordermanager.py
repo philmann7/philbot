@@ -356,7 +356,7 @@ class OrderManager:
 
         elif signal and signal != Signals.CLOSE:
             self.openPositionFromSignal(
-                symbol, signal, client, cloud, newprice,
+                symbol, signal, client, cloud, newprice, account_id,
             )
 
     def updateFromAccountActivity(self, symbol, message_type, data):
@@ -416,7 +416,7 @@ class OrderManager:
             return contracts  # None
 
     def openPositionFromSignal(
-        self, symbol, signal, client, cloud, price,
+        self, symbol, signal, client, cloud, price, account_id,
     ):
         standard_dev = getStdDevForSymbol(
             client, symbol, self.config.stdev_period)
