@@ -300,8 +300,9 @@ class Position:
         self.associated_orders[otherdata["OrderKey"]] = message_type
         match message_type:
             case "OrderFill":
-                self.netpos += otherdata["OriginalQuantity"] if otherdata["OrderInstructions"] == "Buy" else \
-                    -1 * otherdata["OriginalQuantity"]
+                original_quantity = int(otherdata["OriginalQuantity"])
+                self.netpos += original_quantity if otherdata["OrderInstructions"] == "Buy" else \
+                    -1 * original_quantity
 
     def checkTimeouts(self, client, account_id, timeoutlength):
         """
