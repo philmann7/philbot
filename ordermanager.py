@@ -274,6 +274,9 @@ class Position:
         Opening a position and closing for other reasons
         are handled elsewhere.
         """
+        if not price:
+            print(self)
+            return 0
         if self.state == Signals.EXIT:
             return Signals.EXIT
 
