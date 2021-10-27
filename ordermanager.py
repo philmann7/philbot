@@ -268,7 +268,7 @@ class Position:
         return order_id
 
     def updatePositionFromQuote(
-            self, cloud, signal, price, standard_deviation):
+            self, cloud, signal, price, standard_deviation, client, account_id):
         """
         Handles stop loss, take profit and adding to a position.
         Opening a position and closing for other reasons
@@ -281,7 +281,7 @@ class Position:
             return Signals.EXIT
 
         if signal == Signals.OPEN_OR_INCREASE and self.state == Signals.OPEN:
-            return self.increase()
+            return self.increase(client, account_id)
 
         cloud_color = cloud.status[0]
 
@@ -357,7 +357,7 @@ class OrderManager:
             standard_deviation = getStdDevForSymbol(
                 client, symbol, self.config.stdev_period)
             self.currentpositions[symbol].updatePositionFromQuote(
-                cloud, signal, newprice, standard_deviation)
+                cloud, signal, newprice, standard_deviation, client, account_id)
 
         elif signal and signal != Signals.CLOSE:
             self.openPositionFromSignal(
