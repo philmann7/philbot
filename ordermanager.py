@@ -288,7 +288,7 @@ class Position:
         stop_level = StopType.stopTupleToLevel(self.stop, cloud)
         if (price < stop_level and cloud_color == CloudColor.GREEN) or (
                 price > stop_level and cloud_color == CloudColor.RED):
-            return self.close()
+            return self.close(client, account_id)
 
         if (price > self.takeprofit + (standard_deviation * 0.25) and cloud_color == CloudColor.GREEN) or (
                 price < self.takeprofit - (standard_deviation * 0.25) and cloud_color == CloudColor.RED):
