@@ -90,7 +90,8 @@ def levelSet(
     if abs(currentprice - takeprofit) > 4 * riskloss:
         takeprofit = currentprice + (directionmod * 3 * riskloss)
 
-    print(f"Take Profit: {takeprofit}\nStop Level: {stop}\nStandard Deviation {standard_deviation}")
+    print(
+        f"Take Profit: {takeprofit}\nStop Level: {stop}\nStandard Deviation {standard_deviation}")
     return stop, takeprofit
 
 
