@@ -10,7 +10,6 @@ are irrelevant to this module.
 """
 
 from enum import Enum
-import asyncio
 
 from ema import exp_mov_avg, Cloud, CloudColor, CloudPriceLocation
 from botutils import get_history
@@ -22,67 +21,80 @@ class Signals(Enum):
 
 
 class Signaler:
+    """
+    A class for sending signals from the Signals enum,
+    and to hold the relevant data and objects for
+    determining what signals to send.
+    """
     def __init__(
         self,
         client,
         symbol,
-        shortEMAlength,
-        longEMAlength,
+        short_ema_length,
+        long_ema_length,
     ):
-        history = gethistory(client, symbol)
+        """
+        Fields:
+        short_ema_length
+        long_ema_length
+        historical
+        first_chart_equity
+        symbol
+        cloud
+        """
+        history = get_history(client, symbol)
         closevals = [candle["close"] for candle in history]
 
-        self.shortEMAlength = shortEMAlength
-        self.longEMAlength = longEMAlength
+        self.short_ema_length = short_ema_length
+        self.long_ema_length = long_ema_length
 
-        shortEMA = expMovAvg(closevals.copy(), shortEMAlength)
-        longEMA = expMovAvg(closevals.copy(), longEMAlength)
+        short_ema = exp_mov_avg(closevals.copy(), short_ema_length)
+        long_ema = exp_mov_avg(closevals.copy(), long_ema_length)
         currentprice = closevals[-1]
 
-        # from completed candles, only change on new completed candle
-        self.historical = {"short": shortEMA, "long": longEMA}
-        self.first_chart_equity = True  # so as to ignore the first
-        # candle from the chart equity stream.
-        # if not ignored would add redundant data to ema calculations
-        # since the close of the current candle should be covered by gethistory
-        self.symbol = symbol
-        self.cloud = Cloud(shortEMA, longEMA, currentprice)
+        # From completed candles, only change on new completed candle.
+        self.historical = {"short": short_ema, "long": long_ema}
 
-    def updateCloud(self, service, newprice):
+        # So as to ignore the first candle from the chart equity stream.
+        # (ie. the current data which will have already been retrieved from get_history)
+        # If not ignored would add redundant data to ema calculations.
+        self.first_chart_equity = True
+
+        self.symbol = symbol
+        self.cloud = Cloud(short_ema, long_ema, currentprice)
+
+    def update_cloud(self, new_price):
         """
         Update EMAs and cloud based on new data.
         To be called after recieving new quote.
-        Called by update and passes 0 if cloud status is
-        unchanged and (oldstatus, newstatus) otherwise
-
-        A lot of this could likely be moved inside the
-        cloud class.
+        Called by update and returns 0 if cloud status is
+        unchanged and (old_status, new_status) otherwise.
         """
         status = self.cloud.status
-        self.cloud.shortEMA = expMovAvg(
-            [self.historical["short"], newprice], self.shortEMAlength)
-        self.cloud.longEMA = expMovAvg(
-            [self.historical["long"], newprice], self.longEMAlength)
+        self.cloud.short_ema = exp_mov_avg(
+            [self.historical["short"], new_price], self.short_ema_length)
+        self.cloud.long_ema = exp_mov_avg(
+            [self.historical["long"], new_price], self.long_ema_length)
 
-        newstatus = self.cloud.ema_cloud_status(newprice)
-        self.cloud.status = newstatus
+        new_status = self.cloud.ema_cloud_status(new_price)
 
-        if newstatus != status:
-            return (status, newstatus)
-        else:
-            return 0
+        if new_status != status:
+            self.cloud.status = new_status
+            return (status, new_status)
 
-    def cloudStatusToSignal(self, status, newstatus):
+        return 0
+
+    def cloud_status_to_signal(self, status, new_status):
         """
-        Input should come from the update function
-        Takes a change of status (oldstatus, newstatus)
+        Input should come from the update function.
+        Takes a change of status (old_status, new_status)
         and returns a signal from the Signal enum or 0.
-        Returns Signals.CLOSE in event of cloud color change
+        Returns Signals.CLOSE in event of cloud color change.
         """
         color, location = status
-        newcolor, newlocation = newstatus
+        new_color, new_location = new_status
 
-        if color != newcolor:
+        if color != new_color:
             # exit any entered position on color change
             return Signals.CLOSE
 
@@ -90,24 +102,24 @@ class Signaler:
             # bullish moves up
             if (
                 location == CloudPriceLocation.BELOW
-                and newlocation == CloudPriceLocation.INSIDE
+                and new_location == CloudPriceLocation.INSIDE
             ):
                 return Signals.OPEN
             if (
                 location == CloudPriceLocation.INSIDE
-                and newlocation == CloudPriceLocation.ABOVE
+                and new_location == CloudPriceLocation.ABOVE
             ):
                 return Signals.OPEN_OR_INCREASE
 
             # bearish moves down
             if (
                 location == CloudPriceLocation.ABOVE
-                and newlocation == CloudPriceLocation.INSIDE
+                and new_location == CloudPriceLocation.INSIDE
             ):
                 return 0
             if (
                 location == CloudPriceLocation.INSIDE
-                and newlocation == CloudPriceLocation.BELOW
+                and new_location == CloudPriceLocation.BELOW
             ):
                 return 0
 
@@ -115,24 +127,24 @@ class Signaler:
             # bullish moves up
             if (
                 location == CloudPriceLocation.BELOW
-                and newlocation == CloudPriceLocation.INSIDE
+                and new_location == CloudPriceLocation.INSIDE
             ):
                 return 0
             if (
                 location == CloudPriceLocation.INSIDE
-                and newlocation == CloudPriceLocation.ABOVE
+                and new_location == CloudPriceLocation.ABOVE
             ):
                 return 0
 
             # bearish moves down
             if (
                 location == CloudPriceLocation.ABOVE
-                and newlocation == CloudPriceLocation.INSIDE
+                and new_location == CloudPriceLocation.INSIDE
             ):
                 return Signals.OPEN
             if (
                 location == CloudPriceLocation.INSIDE
-                and newlocation == CloudPriceLocation.BELOW
+                and new_location == CloudPriceLocation.BELOW
             ):
                 return Signals.OPEN_OR_INCREASE
 
@@ -141,30 +153,32 @@ class Signaler:
 
     def update(self, service, data,):
         """
-        updates cloud and outputs signal if any, and newprice
+        updates cloud and outputs signal if any, and new_price
         """
         if service == "QUOTE":
             try:
-                newprice = data["LAST_PRICE"]
-                print(f"New Quote: {newprice}")
-            except KeyError as e:
-                print(f"No new price from quote stream: {e}")
-                print("-----------------------------------")
+                new_price = data["LAST_PRICE"]
+            except KeyError as _:
                 return 0, None
 
         elif service == "CHART_EQUITY":
+
+            # Check if this is the first message from the stream.
+            # The first message should be ignored for sensible
+            # EMA calculation.
             if self.first_chart_equity:
                 self.first_chart_equity = False
                 return 0, None
+
             close_price = data["CLOSE_PRICE"]
-            self.historical["short"] = expMovAvg(
-                [self.historical["short"], close_price], self.shortEMAlength)
-            self.historical["long"] = expMovAvg(
-                [self.historical["long"], close_price], self.longEMAlength)
+            self.historical["short"] = exp_mov_avg(
+                [self.historical["short"], close_price], self.short_ema_length)
+            self.historical["long"] = exp_mov_avg(
+                [self.historical["long"], close_price], self.long_ema_length)
             return 0, None
 
-        status_update = self.updateCloud(service, newprice,)
+        status_update = self.update_cloud(service, new_price)
         if status_update:
-            oldstatus, newstatus = status_update
-            return self.cloudStatusToSignal(oldstatus, newstatus), newprice
-        return 0, newprice
+            old_status, new_status = status_update
+            return self.cloud_status_to_signal(old_status, new_status), new_price
+        return 0, new_price
