@@ -68,6 +68,7 @@ class Cloud:
     A class to hold the values of the moving averages along with the
     status (color and relative price location) of the cloud.
     """
+
     def __init__(self, short_ema, long_ema, currentprice):
         """Store current EMA data and use price to determine the cloud status."""
         self.short_ema = short_ema
