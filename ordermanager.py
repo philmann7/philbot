@@ -1,51 +1,57 @@
-# tracks and manages positions
-# sends orders
-# moves stoploss to take profits
-# https://tda-api.readthedocs.io/en/latest/client.html#orders
-from signaler import Signals
-from ema import CloudColor, CloudPriceLocation
-from botutils import getStdDevForSymbol, getFlattenedChain
-
-from tda.orders.options import option_buy_to_open_limit, option_sell_to_close_limit, option_sell_to_close_market, option_buy_to_open_market
-from tda.utils import Utils
+"""
+Tracks and manages positions.
+Sends orders.
+https://tda-api.readthedocs.io/en/latest/client.html#orders
+"""
 
 from enum import Enum
 from datetime import datetime, timedelta
-
-import httpx
 import time
+
+from tda.orders.options import option_buy_to_open_limit, option_sell_to_close_limit, \
+option_sell_to_close_market, option_buy_to_open_market
+from tda.utils import Utils
+
+from signaler import Signals
+from ema import CloudColor, CloudPriceLocation
+from botutils import get_std_dev_for_symbol, get_flattened_chain
+
 
 
 class StopType(Enum):
-    EMALong, EMAShort = range(2)
+    """
+    Enum for various stop types.
+    Enables dynamic stop levels.
+    """
+    ema_long, ema_short = range(2)
 
     @classmethod
-    def stopTypeToLevel(cls, stoptype, cloud):
+    def stop_type_to_level(cls, stoptype, cloud):
         """
-        gets a number from the type of stop (ie EMALong etc.)
+        gets a number from the type of stop (ie ema_long etc.)
         """
         match stoptype:
-            case cls.EMAShort:
+            case cls.ema_short:
                 return cloud.shortEMA
-            case cls.EMALong:
+            case cls.ema_long:
                 return cloud.longEMA
             case other:
                 return other
 
     @classmethod
-    def stopTupleToLevel(cls, stoptuple, cloud):
+    def stop_tuple_to_level(cls, stoptuple, cloud):
         """
         returns a level (price) from a stop tuple
         stop tuple expected in the format of
         (StopType, priceoffset: float)
         """
         stoptype, offset = stoptuple
-        return cls.stopTypeToLevel(stoptype, cloud) + offset
+        return cls.stop_type_to_level(stoptype, cloud) + offset
 
 # possibly turn this into class to store values like multipliers
 
 
-def levelSet(
+def level_set(
     currentprice, standard_deviation, cloud,
 ):
     """
@@ -71,19 +77,17 @@ def levelSet(
     stopmod = stopmod * directionmod
 
     if cloudlocation == CloudPriceLocation.INSIDE:  # ie passing through long ema
-        stop = (StopType.EMALong, (standard_deviation * stopmod * -1))
+        stop = (StopType.ema_long, (standard_deviation * stopmod * -1))
 
-    if (
-        cloudlocation == CloudPriceLocation.ABOVE  # ie passing through short ema
-        or cloudlocation == CloudPriceLocation.BELOW  # from either cloud
-    ):
-        stop = (StopType.EMALong, 0)
+    # If price passes through short EMA from either color cloud
+    if cloudlocation in (CloudPriceLocation.ABOVE, CloudPriceLocation.BELOW):
+        stop = (StopType.ema_long, 0)
         # or in case the long EMA is very far away
         if abs(cloud.longEMA - currentprice) > abs(currentprice -
-                                                   (cloud.shortEMA - (directionmod * 2 * standard_deviation))):
-            stop = (StopType.EMAShort, (directionmod * 2 * standard_deviation))
+                   (cloud.shortEMA - (directionmod * 2 * standard_deviation))):
+            stop = (StopType.ema_short, (directionmod * 2 * standard_deviation))
 
-    riskloss = abs(currentprice - StopType.stopTupleToLevel(stop, cloud))
+    riskloss = abs(currentprice - StopType.stop_tuple_to_level(stop, cloud))
 
     takeprofit = cloud.shortEMA + (standard_deviation * takeprofitmod)
     # enforce 3:1 reward:risk if takeprofit is very far away
@@ -95,15 +99,8 @@ def levelSet(
     return stop, takeprofit
 
 
-class LevelSetter:
-    """
-    holds levelsetter settings
-    """
-
-    pass
-
-
 class OrderManagerConfig:
+    """To hold settings relevant to the OrderManager."""
     def __init__(
         self,
         stdev_period,
@@ -161,7 +158,7 @@ class Position:
         self.closed_time = None
 
     # possibly move these into order manager
-    # an initializer. for adding to a position use updatePositionFromQuote
+    # an initializer. for adding to a position use update_position_from_quote
 
     def open(
         self, client, account_id, limit,
@@ -170,7 +167,7 @@ class Position:
         For opening a position on the first valid buy signal.
 
         This method should not be used to add to a position, for
-        that use updatePositionFromQuote and increase.
+        that use update_position_from_quote and increase.
         """
         while True:
             try:
@@ -209,7 +206,8 @@ class Position:
                     client.cancel_order(account_id, order_id)
                 except Exception as e:
                     print(
-                        f"Exception canceling order (id: {order_id}:{self.associated_orders[order_id]}):\n{e}")
+                        f"Exception canceling order "
+                        f"(id: {order_id}:{self.associated_orders[order_id]}):\n{e}")
         # selling to close out position (important that this is done
         # after canceling so sell orders don't get canceled)
         if self.netpos < 1:
@@ -268,7 +266,7 @@ class Position:
         print(f"Adding to position {self.contract}")
         return order_id
 
-    def updatePositionFromQuote(
+    def update_position_from_quote(
             self, cloud, signal, price, standard_deviation, client, account_id):
         """
         Handles stop loss, take profit and adding to a position.
@@ -286,7 +284,7 @@ class Position:
 
         cloud_color = cloud.status[0]
 
-        stop_level = StopType.stopTupleToLevel(self.stop, cloud)
+        stop_level = StopType.stop_tuple_to_level(self.stop, cloud)
         if (price < stop_level and cloud_color == CloudColor.GREEN) or (
                 price > stop_level and cloud_color == CloudColor.RED):
             return self.close(client, account_id)
@@ -297,7 +295,7 @@ class Position:
             self.takeprofit += (standard_deviation *
                                 0.75) if cloud_color == CloudColor.GREEN else (standard_deviation * -0.75)
 
-    def updateFromAccountActivity(self, message_type, otherdata):
+    def update_from_account_activity(self, message_type, otherdata):
         """
         Handles order status updates like order fills or UROUT messages.
         otherdata argument should be the output of the XML data parser.
@@ -309,7 +307,7 @@ class Position:
                 self.netpos += original_quantity if otherdata["OrderInstructions"] == "Buy" else \
                     -1 * original_quantity
 
-    def checkTimeouts(self, client, account_id, timeoutlength):
+    def check_timeouts(self, client, account_id, timeoutlength):
         """
         cancels orders that have been open and unfilled
         for too long.
@@ -326,58 +324,62 @@ class Position:
 
 
 class OrderManager:
+    """
+    Manages orders and holds relevant data like current positions.
+    """
     def __init__(
         self, config,
     ):
+        """Initialize OrderManager with an OrderManagerConfig and empty current_positions."""
         self.config = config  # class OrderManagerConfig
-        self.currentpositions = {}  # symbol:Position
+        self.current_positions = {}  # symbol:Position
 
     def updateFromQuote(self, client, account_id, cloud,
                         symbol, signal, newprice):
         """
-        update parameter is the output of
+        Update parameter is the output of
         signaler.update so update should be Signals.something
-        or 0
+        or 0.
         """
         # garbage collection
-        if symbol in self.currentpositions and self.currentpositions[symbol].closed_time:
+        if symbol in self.current_positions and self.current_positions[symbol].closed_time:
             now = datetime.now()
             if timedelta.total_seconds(
-                    now - self.currentpositions[symbol].closed_time) > self.config.time_btwn_positions:
-                self.currentpositions.pop(symbol)
+                    now - self.current_positions[symbol].closed_time) > self.config.time_btwn_positions:
+                self.current_positions.pop(symbol)
             else:
                 return 0
         # this will be a cloud color change
-        if signal == Signals.CLOSE and symbol in self.currentpositions:
-            self.currentpositions[symbol].close(client, account_id)
+        if signal == Signals.CLOSE and symbol in self.current_positions:
+            self.current_positions[symbol].close(client, account_id)
 
-        elif symbol in self.currentpositions:
-            self.currentpositions[symbol].checkTimeouts(
+        elif symbol in self.current_positions:
+            self.current_positions[symbol].check_timeouts(
                 client, account_id, self.config.order_timeout_length)
 
-            standard_deviation = getStdDevForSymbol(
+            standard_deviation = get_std_dev_for_symbol(
                 client, symbol, self.config.stdev_period)
-            self.currentpositions[symbol].updatePositionFromQuote(
+            self.current_positions[symbol].update_position_from_quote(
                 cloud, signal, newprice, standard_deviation, client, account_id)
 
         elif signal and signal != Signals.CLOSE:
-            self.openPositionFromSignal(
+            self.open_position_from_signal(
                 symbol, signal, client, cloud, newprice, account_id,
             )
 
-    def updateFromAccountActivity(self, symbol, message_type, data):
+    def update_from_account_activity(self, symbol, message_type, data):
         """
-        handles new messages from the account activity stream
-        like order fills or cancels
+        Handles new messages from the account activity stream.
+        Like order fills or cancels.
         """
-        self.currentpositions[symbol].updateFromAccountActivity(
+        self.current_positions[symbol].update_from_account_activity(
             message_type, data)
 
     def getContractFromChain(
         self, client, symbol, take_profit, stop, currentprice, cloudcolor
     ):
         """
-        returns an appropriate options contract symbol
+        Returns an appropriate options contract symbol.
         should validate risk/reward with the philrate
         """
         putCall = None
@@ -388,7 +390,7 @@ class OrderManager:
 
         expected_move_to_profit = abs(take_profit - currentprice)
         expected_move_to_stop = abs(stop - currentprice)
-        contracts = getFlattenedChain(
+        contracts = get_flattened_chain(
             client, symbol, self.config.strike_count, self.config.maxdte + 1,
         )
         # contract validation
@@ -421,14 +423,15 @@ class OrderManager:
         else:
             return contracts  # None
 
-    def openPositionFromSignal(
+    def open_position_from_signal(
         self, symbol, signal, client, cloud, price, account_id,
     ):
-        standard_dev = getStdDevForSymbol(
+        """Opens a position based on a signal."""
+        standard_dev = get_std_dev_for_symbol(
             client, symbol, self.config.stdev_period)
 
-        stop, takeprofit = levelSet(price, standard_dev, cloud)
-        stop_level = StopType.stopTupleToLevel(stop, cloud)
+        stop, takeprofit = level_set(price, standard_dev, cloud)
+        stop_level = StopType.stop_tuple_to_level(stop, cloud)
 
         contract = self.getContractFromChain(
             client, symbol, takeprofit, stop_level, price, cloud.status[0],
@@ -438,7 +441,7 @@ class OrderManager:
             return None
         limit = contract["ask"] + self.config.limit_padding
 
-        self.currentpositions[symbol] = Position(
+        self.current_positions[symbol] = Position(
             contract["symbol"], takeprofit, stop, signal
         )
-        self.currentpositions[symbol].open(client, account_id, limit)
+        self.current_positions[symbol].open(client, account_id, limit)
