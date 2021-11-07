@@ -177,7 +177,7 @@ class Signaler:
                 [self.historical["long"], close_price], self.long_ema_length)
             return 0, None
 
-        status_update = self.update_cloud(service, new_price)
+        status_update = self.update_cloud(new_price)
         if status_update:
             old_status, new_status = status_update
             return self.cloud_status_to_signal(old_status, new_status), new_price
