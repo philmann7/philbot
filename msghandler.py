@@ -20,6 +20,7 @@ class MessageHandler:
     and the first element of the returned tuples is simply the symbol
     for which there is new data.
     """
+
     def __init__(self, fields=None, symbols=None):
         """"A default list of fields and symbols is available."""
 
