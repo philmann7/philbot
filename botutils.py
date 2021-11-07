@@ -19,7 +19,8 @@ def get_history(client, symbol):
                 period=Client.PriceHistory.Period.ONE_DAY,
                 frequency_type=Client.PriceHistory.FrequencyType.MINUTE,
                 frequency=Client.PriceHistory.Frequency.EVERY_MINUTE,
-                # end_datetime defaults to yesterday, necessitating the following
+                # end_datetime defaults to yesterday, necessitating the
+                # following
                 end_datetime=datetime.datetime.today() + datetime.timedelta(days=1),
             )
             resp.raise_for_status()
@@ -137,11 +138,9 @@ class AccountActivityXMLParse:
             "LastUpdated",
         ]
 
-
     def update_tags(self, new_tags):
         """Update self.tags by appending new tags."""
         self.tags.extend(new_tags)
-
 
     def parse(self, xmlstring):
         """
