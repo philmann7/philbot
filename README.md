@@ -1,9 +1,10 @@
-# td-bot
+# philbot
 ## Not yet usable or tested.
-## A framework for implementing strategies using TD Ameritrade's API.
+## A bot which implements a strategy using exponential moving averages and options contracts.
 This code makes heavy use of [tda-api](https://github.com/alexgolec/tda-api). Thanks to author Alex Golec and other contributors.
 
 ### Use info
+Assumes TD Ameritrade as a broker.
 Sensitive account info should be stored in a .env file in the root directory. The program will also generate a token.json in the root directory. Both of these should be git ignored.
 
 The .env file should be of the form

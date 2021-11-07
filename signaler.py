@@ -1,16 +1,23 @@
-# puts out buy (open) signals
-# except for cloud color change
-# take profits and stop losses will
-# be calculated elsewhere
+"""
+A class that wraps an ema.Cloud object and its relevant data.
+Uses that information to emit signals (from the enum like OPEN, CLOSE)
+which are then interpreted as buy/sell signals based on cloud status
+and current positions.
+
+Signals may or may not be followed up on based on stop/take profit
+levels and availability of suitable contracts. These determinations
+are irrelevant to this module.
+"""
 
 from enum import Enum
 import asyncio
 
-from ema import expMovAvg, Cloud, CloudColor, CloudPriceLocation
-from botutils import gethistory
+from ema import exp_mov_avg, Cloud, CloudColor, CloudPriceLocation
+from botutils import get_history
 
 
 class Signals(Enum):
+    """The outputting of these signals is the primary purpose of this module."""
     OPEN, OPEN_OR_INCREASE, CLOSE, EXIT = range(4)
 
 
