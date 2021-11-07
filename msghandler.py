@@ -1,8 +1,30 @@
+"""
+Module to parse messages from the TD Ameritrade API
+and store some of the most recent data.
+Stores price data for example, so even if no new price data
+was received from the last message in the stream, the most recent
+data will still be available.
+"""
 from botutils import AccountActivityXMLParse
 
 
 class MessageHandler:
-    def __init__(self, fields=None):
+    """
+    For handling messages and their data received from TD Ameritrade.
+
+    The class uses methods to return a list, new_data_for, containing tuples.
+    The second item of the tuples in new_data_for is the service name.
+
+    If the message is from account activity the data is returned in the
+    first element of the tuple. Otherwise the relevant data is saved
+    and the first element of the returned tuples is simply the symbol
+    for which there is new data.
+    """
+    def __init__(self, fields=None, symbols=None):
+        """"A default list of fields and symbols is available."""
+
+        # Desired fields from the stream;
+        # not relevant for account activity stream, that's handled elsewhere.
         self.fields = fields or {
             "BID_PRICE",
             "LAST_PRICE",
@@ -12,13 +34,15 @@ class MessageHandler:
             "CLOSE_PRICE",
             "HIGH_PRICE",
             "LOW_PRICE"}
-        # desired fields from the stream, not relevant for account activity stream, that's handled elsewhere
-        # {service: fields}
-        self.last_messages = {symbol: {} for symbol in {"SPY"}}
+
+        symbols = symbols or {"SPY"}
+        # symbol: {service: fields}
+        self.last_messages = {symbol: {} for symbol in symbols}
 
     def handle(self, msg):
+        """Catch-all function for handling messages from TD Ameritrade."""
         service = msg["service"]
-        newdatafor = []
+        new_data_for = []
 
         if service == "ACCT_ACTIVITY":
             for content in msg["content"]:
@@ -27,13 +51,11 @@ class MessageHandler:
                     continue
                 msg_data = AccountActivityXMLParse().parse(
                     content["MESSAGE_DATA"])
+                # Because msg_data["Symbol"] is the contract symbol:
                 symbol = msg_data["Symbol"].split("_")[0]
-                newdatafor.append(
+                new_data_for.append(
                     ((symbol, msg_type, msg_data), "ACCT_ACTIVITY"))
-                print(f"{symbol}:{msg_type}")
-                [print(item) for item in msg_data.items()]
-                print("-------------------------------------")
-            return newdatafor
+            return new_data_for
 
         # should be one content for each symbol
         for content in msg["content"]:
@@ -46,9 +68,6 @@ class MessageHandler:
 
             # dict update operator
             self.last_messages[symbol] |= relevantdata
-            newdatafor.append((symbol, service))
+            new_data_for.append((symbol, service))
 
-            print(f"New quote for {symbol}")
-            [print(item) for item in relevantdata.items()]
-            print("-------------------------------------")
-        return newdatafor
+        return new_data_for
