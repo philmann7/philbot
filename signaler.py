@@ -89,17 +89,20 @@ class Signaler:
         Input should come from the update function.
         Takes a change of status (old_status, new_status)
         and returns a signal from the Signal enum or 0.
+
         Returns Signals.CLOSE in event of cloud color change.
+        Primarily intended for buy signals, stop losses and
+        take profit levels are handled outside this module.
         """
         color, location = status
         new_color, new_location = new_status
 
         if color != new_color:
-            # exit any entered position on color change
+            # Exit any entered position on color change.
             return Signals.CLOSE
 
         if color == CloudColor.GREEN:
-            # bullish moves up
+            # Bullish moves up.
             if (
                 location == CloudPriceLocation.BELOW
                 and new_location == CloudPriceLocation.INSIDE
@@ -111,7 +114,7 @@ class Signaler:
             ):
                 return Signals.OPEN_OR_INCREASE
 
-            # bearish moves down
+            # Bearish moves down.
             if (
                 location == CloudPriceLocation.ABOVE
                 and new_location == CloudPriceLocation.INSIDE
@@ -124,7 +127,7 @@ class Signaler:
                 return 0
 
         if color == CloudColor.RED:
-            # bullish moves up
+            # Bullish moves up.
             if (
                 location == CloudPriceLocation.BELOW
                 and new_location == CloudPriceLocation.INSIDE
@@ -136,7 +139,7 @@ class Signaler:
             ):
                 return 0
 
-            # bearish moves down
+            # Bearish moves down.
             if (
                 location == CloudPriceLocation.ABOVE
                 and new_location == CloudPriceLocation.INSIDE
@@ -148,12 +151,20 @@ class Signaler:
             ):
                 return Signals.OPEN_OR_INCREASE
 
-        # in case of confusion
+        # In case of confusion.
         return 0
 
     def update(self, service, data,):
         """
-        updates cloud and outputs signal if any, and new_price
+        Updates cloud and outputs signal if any (0 if none), and new_price.
+        Wraps the other functions of this clss in the appropriate logic.
+
+        Takes data output by the message handler and uses the new price
+        to emit signals as output.
+
+        I think the CLOSE_PRICE of the CHART_EQUITY stream can end up behind
+        the most recent data given by the QUOTE stream. For this reason CLOSE_PRICE
+        is not returned as a new_price.
         """
         if service == "QUOTE":
             try:
