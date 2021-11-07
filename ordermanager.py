@@ -23,80 +23,79 @@ class StopType(Enum):
     Enum for various stop types.
     Enables dynamic stop levels.
     """
-    ema_long, ema_short = range(2)
+    EMA_LONG, EMA_SHORT = range(2)
 
     @classmethod
-    def stop_type_to_level(cls, stoptype, cloud):
+    def stop_type_to_level(cls, stop_type, cloud):
         """
-        gets a number from the type of stop (ie ema_long etc.)
+        Gets a number from the type of stop (ie EMA_LONG etc.).
+        In case stop_type is a number, return it.
         """
-        match stoptype:
-            case cls.ema_short:
-                return cloud.shortEMA
-            case cls.ema_long:
-                return cloud.longEMA
+        match stop_type:
+            case cls.EMA_SHORT:
+                return cloud.short_ema
+            case cls.EMA_LONG:
+                return cloud.long_ema
             case other:
                 return other
 
     @classmethod
-    def stop_tuple_to_level(cls, stoptuple, cloud):
+    def stop_tuple_to_level(cls, stop_tuple, cloud):
         """
-        returns a level (price) from a stop tuple
-        stop tuple expected in the format of
-        (StopType, priceoffset: float)
+        Returns a level (price) from a stop tuple.
+        stop_tuple expected in the format of:
+        (StopType, price_offset: float)
         """
-        stoptype, offset = stoptuple
-        return cls.stop_type_to_level(stoptype, cloud) + offset
-
-# possibly turn this into class to store values like multipliers
+        stop_type, offset = stop_tuple
+        return cls.stop_type_to_level(stop_type, cloud) + offset
 
 
 def level_set(
-    currentprice, standard_deviation, cloud,
+    current_price, standard_deviation, cloud,
 ):
     """
-    calculates risk and reward levels.
-    should return a stop loss and take profit levels
-    for opening a new position
+    Calculates risk and reward levels.
+    Should return a stop loss and take profit levels.
+    For opening a new position.
 
-    returns a stop (in the format (StopType, offset) and a take profit level)
+    Returns a stop (in the format (StopType, offset)) and a take profit level.
     """
     stop = None
-    takeprofit = None
-    cloudcolor = cloud.status[0]
-    cloudlocation = cloud.status[1]
+    take_profit = None
+    cloud_color = cloud.status[0]
+    cloud_location = cloud.status[1]
 
-    stopmod = 1  # number of std devs
-    takeprofitmod = 2
+    stop_mod = 1  # number of std devs
+    take_profit_mod = 2
 
     directionmod = 1
-    if cloudcolor == CloudColor.RED:
+    if cloud_color == CloudColor.RED:
         directionmod = -1
 
-    takeprofitmod = takeprofitmod * directionmod
-    stopmod = stopmod * directionmod
+    take_profit_mod = take_profit_mod * directionmod
+    stop_mod = stop_mod * directionmod
 
-    if cloudlocation == CloudPriceLocation.INSIDE:  # ie passing through long ema
-        stop = (StopType.ema_long, (standard_deviation * stopmod * -1))
+    if cloud_location == CloudPriceLocation.INSIDE:  # ie passing through long ema
+        stop = (StopType.EMA_LONG, (standard_deviation * stop_mod * -1))
 
     # If price passes through short EMA from either color cloud
-    if cloudlocation in (CloudPriceLocation.ABOVE, CloudPriceLocation.BELOW):
-        stop = (StopType.ema_long, 0)
+    if cloud_location in (CloudPriceLocation.ABOVE, CloudPriceLocation.BELOW):
+        stop = (StopType.EMA_LONG, 0)
         # or in case the long EMA is very far away
-        if abs(cloud.longEMA - currentprice) > abs(currentprice -
+        if abs(cloud.longEMA - current_price) > abs(current_price -
                    (cloud.shortEMA - (directionmod * 2 * standard_deviation))):
-            stop = (StopType.ema_short, (directionmod * 2 * standard_deviation))
+            stop = (StopType.EMA_SHORT, (directionmod * 2 * standard_deviation))
 
-    riskloss = abs(currentprice - StopType.stop_tuple_to_level(stop, cloud))
+    riskloss = abs(current_price - StopType.stop_tuple_to_level(stop, cloud))
 
-    takeprofit = cloud.shortEMA + (standard_deviation * takeprofitmod)
-    # enforce 3:1 reward:risk if takeprofit is very far away
-    if abs(currentprice - takeprofit) > 4 * riskloss:
-        takeprofit = currentprice + (directionmod * 3 * riskloss)
+    take_profit = cloud.shortEMA + (standard_deviation * take_profit_mod)
+    # enforce 3:1 reward:risk if take_profit is very far away
+    if abs(current_price - take_profit) > 4 * riskloss:
+        take_profit = current_price + (directionmod * 3 * riskloss)
 
     print(
-        f"Take Profit: {takeprofit}\nStop Level: {stop}\nStandard Deviation {standard_deviation}")
-    return stop, takeprofit
+        f"Take Profit: {take_profit}\nStop Level: {stop}\nStandard Deviation {standard_deviation}")
+    return stop, take_profit
 
 
 class OrderManagerConfig:
@@ -143,7 +142,7 @@ class Position:
     Controls and tracks an options position
     """
 
-    def __init__(self, contract, takeprofit, stop, state):
+    def __init__(self, contract, take_profit, stop, state):
         self.contract = contract  # contract symbol
         self.state = state  # signaler.Signals.OPEN or OPEN_OR_INCREASE
         # if opened on OPEN_OR_INCREASE only allow position size 1
@@ -152,7 +151,7 @@ class Position:
         self.associated_orders = {}  # id:status
 
         self.stop = stop  # (StopType, offset)
-        self.takeprofit = takeprofit
+        self.take_profit = take_profit
 
         self.opened_time = datetime.now()
         self.closed_time = None
@@ -289,10 +288,10 @@ class Position:
                 price > stop_level and cloud_color == CloudColor.RED):
             return self.close(client, account_id)
 
-        if (price > self.takeprofit + (standard_deviation * 0.25) and cloud_color == CloudColor.GREEN) or (
-                price < self.takeprofit - (standard_deviation * 0.25) and cloud_color == CloudColor.RED):
-            self.stop = (self.takeprofit, 0)
-            self.takeprofit += (standard_deviation *
+        if (price > self.take_profit + (standard_deviation * 0.25) and cloud_color == CloudColor.GREEN) or (
+                price < self.take_profit - (standard_deviation * 0.25) and cloud_color == CloudColor.RED):
+            self.stop = (self.take_profit, 0)
+            self.take_profit += (standard_deviation *
                                 0.75) if cloud_color == CloudColor.GREEN else (standard_deviation * -0.75)
 
     def update_from_account_activity(self, message_type, otherdata):
@@ -376,20 +375,20 @@ class OrderManager:
             message_type, data)
 
     def getContractFromChain(
-        self, client, symbol, take_profit, stop, currentprice, cloudcolor
+        self, client, symbol, take_profit, stop, current_price, cloud_color
     ):
         """
         Returns an appropriate options contract symbol.
         should validate risk/reward with the philrate
         """
         putCall = None
-        if cloudcolor == CloudColor.GREEN:
+        if cloud_color == CloudColor.GREEN:
             putCall = "CALL"
-        elif cloudcolor == CloudColor.RED:
+        elif cloud_color == CloudColor.RED:
             putCall = "PUT"
 
-        expected_move_to_profit = abs(take_profit - currentprice)
-        expected_move_to_stop = abs(stop - currentprice)
+        expected_move_to_profit = abs(take_profit - current_price)
+        expected_move_to_stop = abs(stop - current_price)
         contracts = get_flattened_chain(
             client, symbol, self.config.strike_count, self.config.maxdte + 1,
         )
@@ -430,11 +429,11 @@ class OrderManager:
         standard_dev = get_std_dev_for_symbol(
             client, symbol, self.config.stdev_period)
 
-        stop, takeprofit = level_set(price, standard_dev, cloud)
+        stop, take_profit = level_set(price, standard_dev, cloud)
         stop_level = StopType.stop_tuple_to_level(stop, cloud)
 
         contract = self.getContractFromChain(
-            client, symbol, takeprofit, stop_level, price, cloud.status[0],
+            client, symbol, take_profit, stop_level, price, cloud.status[0],
         )
         if not contract:
             print("No suitable contracts")
@@ -442,6 +441,6 @@ class OrderManager:
         limit = contract["ask"] + self.config.limit_padding
 
         self.current_positions[symbol] = Position(
-            contract["symbol"], takeprofit, stop, signal
+            contract["symbol"], take_profit, stop, signal
         )
         self.current_positions[symbol].open(client, account_id, limit)
