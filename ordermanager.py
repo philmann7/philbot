@@ -97,15 +97,13 @@ def level_set(
                 StopType.EMA_SHORT,
                 (direction_mod * 0.5 * standard_deviation))
 
-    riskloss = abs(current_price - StopType.stop_tuple_to_level(stop, cloud))
-
     take_profit = cloud.short_ema + (standard_deviation * take_profit_mod)
-    # enforce 3:1 reward:risk if take_profit is very far away
-    if abs(current_price - take_profit) > 4 * riskloss:
-        take_profit = current_price + (direction_mod * 3 * riskloss)
 
-    print(
-        f"Take Profit: {take_profit}\nStop Level: {stop}\nStandard Deviation {standard_deviation}")
+    risk_loss = abs(current_price - StopType.stop_tuple_to_level(stop, cloud))
+    # Enforce 3:1 reward:risk if take_profit is very far away.
+    if abs(current_price - take_profit) > 4 * risk_loss:
+        take_profit = current_price + (direction_mod * 3 * risk_loss)
+
     return stop, take_profit
 
 
@@ -125,41 +123,57 @@ class OrderManagerConfig:
         min_risk_reward_ratio,
         strike_count,
         limit_padding,
-        time_btwn_positions,  # this and order_timeout_length in seconds
+        time_btwn_positions,  # This and order_timeout_length in seconds.
         order_timeout_length,
     ):
         self.stdev_period = (
-            stdev_period  # period of calculation of the standard deviation
+            stdev_period  # Period of calculation of the standard deviation.
         )
-        self.mindte = mindte  # days to expiration on the options contracts
+        self.mindte = mindte  # Days to expiration on the options contracts.
         self.maxdte = maxdte
         self.max_contract_price = max_contract_price
         self.min_contract_price = min_contract_price
-        self.max_spread = max_spread  # bid/ask spread
-        # on price of contract so use option pricing convention ie .10 for 10
-        # dollars
+        self.max_spread = max_spread  # bid/ask spread.
+        # On price of contract so use option pricing convention ie .10 for 10
+        # dollars.
         self.max_loss = max_loss
         self.min_loss = min_loss
-        # profit/loss expected_move_to_profit/expected_move_to_stop
+        # profit/loss <---> expected_move_to_profit/expected_move_to_stop
         self.min_risk_reward_ratio = min_risk_reward_ratio
-        self.strike_count = strike_count  # number of strikes to ask the API for
-        self.limit_padding = limit_padding  # if set to 0.01 the limit buy will
-        # be set at ask+.01
+        self.strike_count = strike_count  # Number of strikes to ask the API for.
+
+        # If set to 0.01 the limit buy will be set at ask+.01
+        self.limit_padding = limit_padding
         self.time_btwn_positions = time_btwn_positions
         self.order_timeout_length = order_timeout_length
 
 
 class Position:
     """
-    Controls and tracks an options position
+    Controls and tracks an options position.
+
+    Fields:
+    contract
+    state
+    net_pos
+    associated_orders
+    stop
+    take_profit
+    opened_time
+    closed_time
     """
 
     def __init__(self, contract, take_profit, stop, state):
+        """
+        A position object initializer. This method doesn't
+        actually send any orders, ie open the position.
+        """
         self.contract = contract  # contract symbol
-        self.state = state  # signaler.Signals.OPEN or OPEN_OR_INCREASE
-        # if opened on OPEN_OR_INCREASE only allow position size 1
 
-        self.netpos = 0
+        self.state = state  # signaler.Signals.OPEN or OPEN_OR_INCREASE
+        # If opened on OPEN_OR_INCREASE only allow position size 1
+
+        self.net_pos = 0
         self.associated_orders = {}  # id:status
 
         self.stop = stop  # (StopType, offset)
@@ -167,9 +181,6 @@ class Position:
 
         self.opened_time = datetime.now()
         self.closed_time = None
-
-    # possibly move these into order manager
-    # an initializer. for adding to a position use update_position_from_quote
 
     def open(
         self, client, account_id, limit,
@@ -192,12 +203,13 @@ class Position:
             except Exception as e:
                 print(e)
                 time.sleep(0.5)
+
         order_id = Utils(client, account_id).extract_order_id(response)
-        # order_id is potentially None
+        # Since order_id is potentially None:
         if not order_id:
             return 0
+
         self.associated_orders[order_id] = "OPEN"
-        print(f"Order sent for {self.contract}")
         return order_id
 
     def close(self, client, account_id):
@@ -221,14 +233,14 @@ class Position:
                         f"(id: {order_id}:{self.associated_orders[order_id]}):\n{e}")
         # selling to close out position (important that this is done
         # after canceling so sell orders don't get canceled)
-        if self.netpos < 1:
+        if self.net_pos < 1:
             return 0
 
         while True:
             try:
                 response = client.place_order(account_id,
                                               option_sell_to_close_market(
-                                                  self.contract, self.netpos)
+                                                  self.contract, self.net_pos)
                                               .build()
                                               )
                 response.raise_for_status()
@@ -247,12 +259,10 @@ class Position:
     def increase(
         self, client, account_id,
     ):
-        """
-        Adds to the position
-        """
+        """ Adds to the position """
         self.state = Signals.OPEN_OR_INCREASE
 
-        # don't increase if there are open orders
+        # Don't increase if there are open orders.
         if "OPEN" in self.associated_orders.values():
             return 0
 
@@ -274,7 +284,6 @@ class Position:
         if not order_id:
             return 0
         self.associated_orders[order_id] = "OPEN"
-        print(f"Adding to position {self.contract}")
         return order_id
 
     def update_position_from_quote(
@@ -285,7 +294,6 @@ class Position:
         are handled elsewhere.
         """
         if not price:
-            print(self)
             return 0
         if self.state == Signals.EXIT:
             return Signals.EXIT
@@ -305,6 +313,7 @@ class Position:
             self.stop = (self.take_profit, 0)
             self.take_profit += (standard_deviation *
                                  0.75) if cloud_color == CloudColor.GREEN else (standard_deviation * -0.75)
+            return self.take_profit
 
     def update_from_account_activity(self, message_type, otherdata):
         """
@@ -315,12 +324,12 @@ class Position:
         match message_type:
             case "OrderFill":
                 original_quantity = int(otherdata["OriginalQuantity"])
-                self.netpos += original_quantity if otherdata["OrderInstructions"] == "Buy" else \
+                self.net_pos += original_quantity if otherdata["OrderInstructions"] == "Buy" else \
                     -1 * original_quantity
 
     def check_timeouts(self, client, account_id, timeoutlength):
         """
-        cancels orders that have been open and unfilled
+        Cancels orders that have been open and unfilled
         for too long.
         """
         now = datetime.now()
@@ -335,9 +344,7 @@ class Position:
 
 
 class OrderManager:
-    """
-    Manages orders and holds relevant data like current positions.
-    """
+    """ Manages orders and holds relevant data like current positions. """
 
     def __init__(
         self, config,
@@ -346,13 +353,9 @@ class OrderManager:
         self.config = config  # class OrderManagerConfig
         self.current_positions = {}  # symbol:Position
 
-    def updateFromQuote(self, client, account_id, cloud,
+    def update_from_quote(self, client, account_id, cloud,
                         symbol, signal, newprice):
-        """
-        Update parameter is the output of
-        signaler.update so update should be Signals.something
-        or 0.
-        """
+        """ Updates a position based on a new price quote. """
         # garbage collection
         if symbol in self.current_positions and self.current_positions[symbol].closed_time:
             now = datetime.now()
@@ -361,7 +364,7 @@ class OrderManager:
                 self.current_positions.pop(symbol)
             else:
                 return 0
-        # this will be a cloud color change
+
         if signal == Signals.CLOSE and symbol in self.current_positions:
             self.current_positions[symbol].close(client, account_id)
 
