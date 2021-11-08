@@ -9,13 +9,12 @@ from datetime import datetime, timedelta
 import time
 
 from tda.orders.options import option_buy_to_open_limit, option_sell_to_close_limit, \
-option_sell_to_close_market, option_buy_to_open_market
+    option_sell_to_close_market, option_buy_to_open_market
 from tda.utils import Utils
 
 from signaler import Signals
 from ema import CloudColor, CloudPriceLocation
 from botutils import get_std_dev_for_symbol, get_flattened_chain
-
 
 
 class StopType(Enum):
@@ -86,13 +85,17 @@ def level_set(
 
         # Or in case the long EMA is very far away:
         if abs(cloud.long_ema - current_price) > abs(current_price -
-                   (cloud.short_ema - (direction_mod * 2 * standard_deviation))):
-            stop = (StopType.EMA_SHORT, (direction_mod * 2 * standard_deviation))
+                                                     (cloud.short_ema - (direction_mod * 2 * standard_deviation))):
+            stop = (
+                StopType.EMA_SHORT,
+                (direction_mod * 2 * standard_deviation))
 
         # Or if the long EMA is too close:
         elif abs(cloud.long_ema - current_price) < abs(current_price -
-                   (cloud.short_ema - (direction_mod * 0.5 * standard_deviation))):
-            stop = (StopType.EMA_SHORT, (direction_mod * 0.5 * standard_deviation))
+                                                       (cloud.short_ema - (direction_mod * 0.5 * standard_deviation))):
+            stop = (
+                StopType.EMA_SHORT,
+                (direction_mod * 0.5 * standard_deviation))
 
     riskloss = abs(current_price - StopType.stop_tuple_to_level(stop, cloud))
 
@@ -108,6 +111,7 @@ def level_set(
 
 class OrderManagerConfig:
     """To hold settings relevant to the OrderManager."""
+
     def __init__(
         self,
         stdev_period,
@@ -300,7 +304,7 @@ class Position:
                 price < self.take_profit - (standard_deviation * 0.25) and cloud_color == CloudColor.RED):
             self.stop = (self.take_profit, 0)
             self.take_profit += (standard_deviation *
-                                0.75) if cloud_color == CloudColor.GREEN else (standard_deviation * -0.75)
+                                 0.75) if cloud_color == CloudColor.GREEN else (standard_deviation * -0.75)
 
     def update_from_account_activity(self, message_type, otherdata):
         """
@@ -334,6 +338,7 @@ class OrderManager:
     """
     Manages orders and holds relevant data like current positions.
     """
+
     def __init__(
         self, config,
     ):
