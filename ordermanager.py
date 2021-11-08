@@ -65,7 +65,8 @@ def level_set(
     cloud_color = cloud.status[0]
     cloud_location = cloud.status[1]
 
-    stop_mod = 1  # number of std devs
+    # These modifiers are in number of standard deviations.
+    stop_mod = 1
     take_profit_mod = 2
 
     direction_mod = 1
@@ -78,17 +79,24 @@ def level_set(
     if cloud_location == CloudPriceLocation.INSIDE:  # ie passing through long ema
         stop = (StopType.EMA_LONG, (standard_deviation * stop_mod * -1))
 
-    # If price passes through short EMA from either color cloud
+    # If price passes through short EMA from either color cloud.
     if cloud_location in (CloudPriceLocation.ABOVE, CloudPriceLocation.BELOW):
+
         stop = (StopType.EMA_LONG, 0)
-        # or in case the long EMA is very far away
-        if abs(cloud.longEMA - current_price) > abs(current_price -
-                   (cloud.shortEMA - (direction_mod * 2 * standard_deviation))):
+
+        # Or in case the long EMA is very far away:
+        if abs(cloud.long_ema - current_price) > abs(current_price -
+                   (cloud.short_ema - (direction_mod * 2 * standard_deviation))):
             stop = (StopType.EMA_SHORT, (direction_mod * 2 * standard_deviation))
+
+        # Or if the long EMA is too close:
+        elif abs(cloud.long_ema - current_price) < abs(current_price -
+                   (cloud.short_ema - (direction_mod * 0.5 * standard_deviation))):
+            stop = (StopType.EMA_SHORT, (direction_mod * 0.5 * standard_deviation))
 
     riskloss = abs(current_price - StopType.stop_tuple_to_level(stop, cloud))
 
-    take_profit = cloud.shortEMA + (standard_deviation * take_profit_mod)
+    take_profit = cloud.short_ema + (standard_deviation * take_profit_mod)
     # enforce 3:1 reward:risk if take_profit is very far away
     if abs(current_price - take_profit) > 4 * riskloss:
         take_profit = current_price + (direction_mod * 3 * riskloss)
