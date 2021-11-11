@@ -384,18 +384,19 @@ class OrderManager:
 
     def update_from_account_activity(self, symbol, message_type, data):
         """
-        Handles new messages from the account activity stream.
-        Like order fills or cancels.
+        Handles new messages from the account activity stream,
+        like order fills or cancels.
         """
         self.current_positions[symbol].update_from_account_activity(
             message_type, data)
 
-    def getContractFromChain(
+    def get_contract_from_chain(
         self, client, symbol, take_profit, stop, current_price, cloud_color
     ):
         """
-        Returns an appropriate options contract symbol.
-        should validate risk/reward with the philrate
+        Asks TD Ameritrade for a section of the option chain.
+        Then eliminate contracts which do not fit within the settings
+        set in self.config, and return one.
         """
         putCall = None
         if cloud_color == CloudColor.GREEN:
@@ -448,11 +449,10 @@ class OrderManager:
         stop, take_profit = level_set(price, standard_dev, cloud)
         stop_level = StopType.stop_tuple_to_level(stop, cloud)
 
-        contract = self.getContractFromChain(
+        contract = self.get_contract_from_chain(
             client, symbol, take_profit, stop_level, price, cloud.status[0],
         )
         if not contract:
-            print("No suitable contracts")
             return None
         limit = contract["ask"] + self.config.limit_padding
 
