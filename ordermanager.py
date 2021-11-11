@@ -356,28 +356,28 @@ class OrderManager:
     def update_from_quote(self, client, account_id, cloud,
                         symbol, signal, newprice):
         """ Updates a position based on a new price quote. """
-        # garbage collection
+        # Garbage collection: removing old position objects to make room for new orders.
         if symbol in self.current_positions and self.current_positions[symbol].closed_time:
             now = datetime.now()
             if timedelta.total_seconds(
                     now - self.current_positions[symbol].closed_time) > self.config.time_btwn_positions:
                 self.current_positions.pop(symbol)
+            # Leave if there is a recently closed position.
             else:
                 return 0
 
-        if signal == Signals.CLOSE and symbol in self.current_positions:
+        if signal in (Signals.CLOSE, Signals.EXIT) and symbol in self.current_positions:
             self.current_positions[symbol].close(client, account_id)
 
         elif symbol in self.current_positions:
             self.current_positions[symbol].check_timeouts(
                 client, account_id, self.config.order_timeout_length)
-
             standard_deviation = get_std_dev_for_symbol(
                 client, symbol, self.config.stdev_period)
             self.current_positions[symbol].update_position_from_quote(
                 cloud, signal, newprice, standard_deviation, client, account_id)
 
-        elif signal and signal != Signals.CLOSE:
+        elif signal and signal not in (Signals.CLOSE, Signals.EXIT):
             self.open_position_from_signal(
                 symbol, signal, client, cloud, newprice, account_id,
             )
