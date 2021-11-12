@@ -1,4 +1,26 @@
+"""
+A module for managing the text UI of philbot.
+"""
 from blessed import Terminal
+
+class PhilbotUI:
+    """The main class from which the UI of philbot."""
+    def __init__(self, term):
+        """
+        Initializer for the philbot UI class.
+        Should take terminal from blessed.
+        """
+        self.term = term
+
+    @property
+    def section_heights(self, num_sections=3):
+        """
+        Return the y-height of each section, calculated with the current terminal height.
+        Defaults to three sections.
+        """
+        total_height = term.height
+        section_height = total_height // num_sections
+        return (section_height * sec for sec in range(num_sections))
 
 def interface_clear(term):
     """
