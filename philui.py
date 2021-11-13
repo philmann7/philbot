@@ -18,7 +18,7 @@ class PhilbotUI:
         Return the y-height of each section, calculated with the current terminal height.
         Defaults to three sections.
         """
-        total_height = term.height
+        total_height = self.term.height
         section_height = total_height // num_sections
         return (section_height * sec for sec in range(num_sections))
 
@@ -31,7 +31,13 @@ def interface_clear(term):
     print(term.home + term.clear, end='')
 
 def main():
-    pass
+    term = Terminal()
+    ui = PhilbotUI(term)
+    locations = "top middle bottom".split()
+
+    interface_clear(ui.term)
+    for location, section_height in zip(locations, ui.section_heights):
+        print(ui.term.move_y(section_height) + f'This is the {location} section.')
 
 if __name__ == '__main__':
     main()
