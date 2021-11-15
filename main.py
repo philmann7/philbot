@@ -26,7 +26,7 @@ stream_client = StreamClient(
         os.getenv("account_number")))
 
 
-def message_handling(msg, signaler, msghandler, ordmngr):
+def message_handling(msg, signaler, msghandler, ordmngr, ui):
     """
     The main logic for handling new information from TDA.
     """
@@ -40,7 +40,7 @@ def message_handling(msg, signaler, msghandler, ordmngr):
 
     if newdatafor and newdatafor[0][1] == "ACCT_ACTIVITY":
         return [
-            ordmngr.updateFromAccountActivity(symbol, msg_type, msg_data)
+            ordmngr.update_from_account_activity(symbol, msg_type, msg_data)
             for ((symbol, msg_type, msg_data), service) in newdatafor
         ]
 
@@ -53,13 +53,13 @@ def message_handling(msg, signaler, msghandler, ordmngr):
         # for signaler in signalers if signaler.symbol == symbol
     ]
     ordermngupdate = [
-        ordmngr.updateFromQuote(
+        ordmngr.update_from_quote(
             client, int(
                 os.getenv("account_number")), signaler.cloud, symbol, signal, newprice)
         for (symbol, (signal, newprice)) in updates
     ]
     ui.interface_clear()
-    ui.dispatch_display(msghandler, [signaler.cloud], ordermanager.current_positions.values())
+    ui.dispatch_display(msghandler, {"SPY":signaler.cloud}, ordmngr.current_positions.values())
 
 async def read_stream(msghandler, signaler, ordmngr, ui):
     await stream_client.login()

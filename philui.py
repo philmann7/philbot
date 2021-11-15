@@ -2,6 +2,7 @@
 A module for managing the text UI of philbot.
 """
 from textwrap import wrap
+from ema import CloudColor
 
 class PhilbotUI:
     """The main class from which the UI of philbot."""
@@ -38,7 +39,7 @@ class PhilbotUI:
         """
         Dispatches to class specific display funcs.
         """
-        top_height, middle_height, bottom_height = self.section_heights()
+        top_height, middle_height, bottom_height = self.section_heights
         section_height = abs(bottom_height - middle_height)
 
         self.display_top(msg_handler, clouds, top_height)
@@ -52,7 +53,10 @@ class PhilbotUI:
         moving averages and EMA cloud information.
         """
         for symbol in {"SPY"}:  # To be changed for handling multiple symbols.
-            last_price = msg_handler.last_messages[symbol]["LAST_PRICE"]
+            try:
+                last_price = msg_handler.last_messages[symbol]["LAST_PRICE"]
+            except KeyError:
+                last_price = "..."
             print(self.term.move_y(top_height) + f"{symbol} Last Price: {last_price}")
 
             cloud = clouds[symbol]
