@@ -22,15 +22,26 @@ class PhilbotUI:
         section_height = total_height // num_sections
         return (section_height * sec for sec in range(num_sections))
 
-def interface_clear(term):
-    """
-    Clears the terminal and sets location to home (0,0) - (top left)
-    as suggested at:
-    https://blessed.readthedocs.io/en/stable/location.html
-    """
-    print(term.home + term.clear, end='')
+    def interface_clear(self):
+        """
+        Clears the terminal and sets location to home (0,0) - (top left)
+        as suggested at:
+        https://blessed.readthedocs.io/en/stable/location.html
+        """
+        print(self.term.home + self.term.clear, end='')
+
+    def dispatch_display(self, msg_handler, clouds, positions):
+        """
+        Dispatches to class specific display funcs.
+        """
+        top_height, middle_height, bottom_height = self.section_heights()
+
+        self.display_top(msg_handler, clouds, top_height)
+        self.display_middle(positions, middle_height)
+        self.display_bottom(bottom_height)
 
 def main():
+    """Testing the module"""
     term = Terminal()
     ui = PhilbotUI(term)
     locations = "top middle bottom".split()
