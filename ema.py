@@ -5,7 +5,6 @@ Uses a list as input and assumes evenly spaced data.
 from enum import Enum
 
 
-# takes a list and returns EMA
 def exp_mov_avg(input_list, period, k=0):
     """
     Note: EMAs take more values than {period} values;
@@ -33,12 +32,15 @@ def exp_mov_avg(input_list, period, k=0):
 
 class CloudColor(Enum):
     """Enum for color of EMA cloud"""
-    RED, GREEN = range(2)
+    RED = "Red"
+    GREEN = "Green"
 
 
 class CloudPriceLocation(Enum):
     """Location of the price relative to the cloud."""
-    ABOVE, INSIDE, BELOW = range(3)
+    ABOVE = "Above"
+    INSIDE = "Inside"
+    BELOW = "Below"
 
 
 def determine_cloud_status(currentprice, short_ema, long_ema):

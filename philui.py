@@ -54,17 +54,18 @@ class PhilbotUI:
         """
         for symbol in {"SPY"}:  # To be changed for handling multiple symbols.
             try:
-                last_price = msg_handler.last_messages[symbol]["LAST_PRICE"]
+                last_price = float(msg_handler.last_messages[symbol]["LAST_PRICE"])
+                last_price = f'{last_price:.2f}' 
             except KeyError:
                 last_price = "..."
-            print(self.term.move_y(top_height) + f"{symbol} Last Price: {last_price:.2f}")
+            print(self.term.move_y(top_height) + f"{symbol} Last Price: {last_price}")
 
             cloud = clouds[symbol]
             color, location = cloud.status
             terminal_color = self.term.black_on_green if color == CloudColor.GREEN else self.term.white_on_red
             print(terminal_color + f"Short EMA: {cloud.short_ema:.2f}")
             print(terminal_color + f"Long EMA: {cloud.long_ema:.2f}")
-            print(terminal_color + f"Price relative to cloud: {location}; cloud color: {color}" + self.term.normal)
+            print(terminal_color + f"Price relative to cloud: {location.value}; Cloud color: {color.value}" + self.term.normal)
 
     def display_middle(self, positions, middle_height):
         """
@@ -75,7 +76,7 @@ class PhilbotUI:
             print(self.term.move_y(middle_height) + self.term.white_on_blue, end='')
             print(f"Contract: {position.contract}")
             print(f"Net position {position.net_pos}")
-            print(f"Stop: {self.stop}      Take profit: {self.take_profit:.2f}")
+            print(f"Stop: {position.stop}      Take profit: {position.take_profit:.2f}")
             print(f"Opened on signal: {position.state}")
             for order in position.associated_orders:
                 print(order)
@@ -89,6 +90,7 @@ class PhilbotUI:
         """
         line_count = 0
         for message in reversed(self.messages):
+            message = str(message)
             lines = reversed(wrap(message, width=self.term.width))
             while line_count < section_height:
                 print(lines.pop(), end='')
