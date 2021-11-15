@@ -88,6 +88,7 @@ class PhilbotUI:
         Streams messages and events like sent orders or errors.
         Add strings to self.messages to display them here.
         """
+        print(self.term.move_y(bottom_height))
         line_count = 0
         for message in reversed(self.messages):
             message = str(message)
