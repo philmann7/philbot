@@ -1,9 +1,7 @@
 """
 A module for managing the text UI of philbot.
 """
-
 from textwrap import wrap
-from blessed import Terminal
 
 class PhilbotUI:
     """The main class from which the UI of philbot."""
