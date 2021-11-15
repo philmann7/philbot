@@ -57,13 +57,13 @@ class PhilbotUI:
                 last_price = msg_handler.last_messages[symbol]["LAST_PRICE"]
             except KeyError:
                 last_price = "..."
-            print(self.term.move_y(top_height) + f"{symbol} Last Price: {last_price}")
+            print(self.term.move_y(top_height) + f"{symbol} Last Price: {last_price:.2f}")
 
             cloud = clouds[symbol]
             color, location = cloud.status
             terminal_color = self.term.black_on_green if color == CloudColor.GREEN else self.term.white_on_red
-            print(terminal_color + f"Short EMA: {cloud.short_ema}")
-            print(terminal_color + f"Long EMA: {cloud.long_ema}")
+            print(terminal_color + f"Short EMA: {cloud.short_ema:.2f}")
+            print(terminal_color + f"Long EMA: {cloud.long_ema:.2f}")
             print(terminal_color + f"Price relative to cloud: {location}; cloud color: {color}" + self.term.normal)
 
     def display_middle(self, positions, middle_height):
@@ -75,7 +75,7 @@ class PhilbotUI:
             print(self.term.move_y(middle_height) + self.term.white_on_blue, end='')
             print(f"Contract: {position.contract}")
             print(f"Net position {position.net_pos}")
-            print(f"Stop: {self.stop}      Take profit: {self.take_profit}")
+            print(f"Stop: {self.stop}      Take profit: {self.take_profit:.2f}")
             print(f"Opened on signal: {position.state}")
             for order in position.associated_orders:
                 print(order)
