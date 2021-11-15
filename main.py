@@ -1,16 +1,18 @@
-from tda.auth import easy_client
-from tda.client import Client
-from tda.streaming import StreamClient
-
 import os
 import asyncio
 import json
 
 from dotenv import load_dotenv
+from blessed import Terminal
+
+from tda.auth import easy_client
+from tda.client import Client
+from tda.streaming import StreamClient
 
 from msghandler import MessageHandler
 from signaler import Signaler
 from ordermanager import OrderManager, OrderManagerConfig
+from philui import PhilbotUI
 
 load_dotenv()
 
@@ -25,13 +27,15 @@ stream_client = StreamClient(
 
 
 def message_handling(msg, signaler, msghandler, ordmngr):
-    # newdatafor in the form of [(symbol, service),...]
-    # or [(content, service),...] in the case of account activity
+    """
+    The main logic for handling new information from TDA.
+    """
     try:
+        # or [(content, service),...] in the case of account activity
+        # newdatafor in the form of [(symbol, service),...]
         newdatafor = msghandler.handle(msg)
-    except KeyError as e:
-        print(msg)
-        print(e)
+    except KeyError as err:
+        ui.messages.append(err)
         return None
 
     if newdatafor and newdatafor[0][1] == "ACCT_ACTIVITY":
@@ -54,13 +58,10 @@ def message_handling(msg, signaler, msghandler, ordmngr):
                 os.getenv("account_number")), signaler.cloud, symbol, signal, newprice)
         for (symbol, (signal, newprice)) in updates
     ]
-    print(f"Short EMA:{signaler.cloud.shortEMA}\n" +
-          f"Long EMA:{signaler.cloud.longEMA}\n")
-    print(f"Cloud status: {signaler.cloud.status}")
-    [print(pos) for pos in ordmngr.currentpositions.values()]
+    ui.interface_clear()
+    ui.dispatch_display(msghandler, [signaler.cloud], ordermanager.current_positions.values())
 
-
-async def read_stream(msghandler, signaler, ordmngr):
+async def read_stream(msghandler, signaler, ordmngr, ui):
     await stream_client.login()
     # await stream_client.quality_of_service(StreamClient.QOSLevel.EXPRESS)
 
@@ -68,17 +69,17 @@ async def read_stream(msghandler, signaler, ordmngr):
     # data immediately after success, and messages with no handlers are
     # dropped.
     stream_client.add_chart_equity_handler(
-        lambda msg: message_handling(msg, signaler, msghandler, ordmngr)
+        lambda msg: message_handling(msg, signaler, msghandler, ordmngr, ui)
     )
     await stream_client.chart_equity_subs(["SPY"])
 
     stream_client.add_level_one_equity_handler(
-        lambda msg: message_handling(msg, signaler, msghandler, ordmngr)
+        lambda msg: message_handling(msg, signaler, msghandler, ordmngr, ui)
     )
     await stream_client.level_one_equity_subs(["SPY"])
 
     stream_client.add_account_activity_handler(
-        lambda msg: message_handling(msg, signaler, msghandler, ordmngr)
+        lambda msg: message_handling(msg, signaler, msghandler, ordmngr, ui)
     )
     await stream_client.account_activity_sub()
 
@@ -87,6 +88,11 @@ async def read_stream(msghandler, signaler, ordmngr):
 
 
 async def main():
+    """
+    Main function where all the modules are configured and instantiated.
+    """
+    term = Terminal()
+    ui = PhilbotUI(term)
     msghandler = MessageHandler()
 
     shortEMALength = 9
@@ -109,7 +115,7 @@ async def main():
         order_timeout_length=30,
     )
     ordmngr = OrderManager(ordermanager_config)
-    await read_stream(msghandler, signaler, ordmngr)
+    await read_stream(msghandler, signaler, ordmngr, ui)
 
 
 asyncio.run(main())

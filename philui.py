@@ -11,6 +11,9 @@ class PhilbotUI:
         """
         Initializer for the philbot UI class.
         Should take terminal from blessed.
+
+        self.messages is a list that should contain any messages
+        (error messages, account activity) to be displayed at the bottom.
         """
         self.term = term
         self.messages = []
