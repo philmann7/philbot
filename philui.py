@@ -1,6 +1,8 @@
 """
 A module for managing the text UI of philbot.
 """
+
+from textwrap import wrap
 from blessed import Terminal
 
 class PhilbotUI:
@@ -11,6 +13,7 @@ class PhilbotUI:
         Should take terminal from blessed.
         """
         self.term = term
+        self.messages = []
 
     @property
     def section_heights(self, num_sections=3):
@@ -35,10 +38,11 @@ class PhilbotUI:
         Dispatches to class specific display funcs.
         """
         top_height, middle_height, bottom_height = self.section_heights()
+        section_height = abs(bottom_height - middle_height)
 
         self.display_top(msg_handler, clouds, top_height)
         self.display_middle(positions, middle_height)
-        self.display_bottom(bottom_height)
+        self.display_bottom(bottom_height, section_height)
 
     def display_top(self, msg_handler, clouds, top_height):
         """
@@ -72,39 +76,20 @@ class PhilbotUI:
                 print(order)
             print(self.term.normal)
 
-    def display_bottom(self, bottom_height):
+    def display_bottom(self, bottom_height, section_height):
         """
         Print to bottom section of terminal.
         Streams messages and events like sent orders or errors.
+        Add strings to self.messages to display them here.
         """
-        for message in self.messages:
-            print(message)
+        line_count = 0
+        for message in reversed(self.messages):
+            lines = reversed(wrap(message, width=self.term.width))
+            while line_count < section_height:
+                print(lines.pop(), end='')
+                print(self.term.move_y(-1))
+                line_count += 1
 
-def main():
-    """Testing the module"""
-    term = Terminal()
-    ui = PhilbotUI(term)
-    locations = "top middle bottom".split()
-
-    interface_clear(ui.term)
-    for location, section_height in zip(locations, ui.section_heights):
-        print(ui.term.move_y(section_height) + f'This is the {location} section.')
 
 if __name__ == '__main__':
-    main()
-
-# if __name__ == "__main__":
-#    term = Terminal()
-#
-#    interface_clear(term)
-#    print(term.blue('this is the top'))
-#    print(term.move_y(term.height // 2) + term.black_on_darkkhaki(term.center('this is the middle')))
-#    print(term.home + term.move_down(term.height) + 'this is the bottom', end='')
-#
-#    with term.cbreak(), term.hidden_cursor():
-#        while True:
-#            inp = term.inkey()
-#            print(
-#                term.home + term.move_down(term.height-3) + term.clear_eol +
-#                'You pressed ' + term.bold(repr(inp))
-#                )
+    pass
