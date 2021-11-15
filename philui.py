@@ -91,7 +91,7 @@ class PhilbotUI:
         line_count = 0
         for message in reversed(self.messages):
             message = str(message)
-            lines = reversed(wrap(message, width=self.term.width))
+            lines = list(reversed(wrap(message, width=self.term.width)))
             while line_count < section_height:
                 print(lines.pop(), end='')
                 print(self.term.move_y(-1))

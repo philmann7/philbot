@@ -100,7 +100,7 @@ async def main():
     signaler = Signaler(client, "SPY", shortEMALength, longEMALength)
 
     ordermanager_config = OrderManagerConfig(
-        stdev_period=50,
+        stdev_period=20,
         mindte=2,
         maxdte=3,
         max_contract_price=2.2,
