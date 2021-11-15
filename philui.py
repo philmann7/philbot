@@ -40,6 +40,46 @@ class PhilbotUI:
         self.display_middle(positions, middle_height)
         self.display_bottom(bottom_height)
 
+    def display_top(self, msg_handler, clouds, top_height):
+        """
+        Printing to the top section of the terminal.
+        Includes price info for tracked symbols, along with their
+        moving averages and EMA cloud information.
+        """
+        for symbol in {"SPY"}:  # To be changed for handling multiple symbols.
+            last_price = msg_handler.last_messages[symbol]["LAST_PRICE"]
+            print(self.term.move_y(top_height) + f"{symbol} Last Price: {last_price}")
+
+            cloud = clouds[symbol]
+            color, location = cloud.status
+            terminal_color = self.term.black_on_green if color == CloudColor.GREEN else self.term.white_on_red
+            print(terminal_color + f"Short EMA: {cloud.short_ema}")
+            print(terminal_color + f"Long EMA: {cloud.long_ema}")
+            print(terminal_color + f"Price relative to cloud: {location}; cloud color: {color}" + self.term.normal)
+
+    def display_middle(self, positions, middle_height):
+        """
+        Print to the middle section of the terminal.
+        Prints position information.
+        """
+        for position in positions:
+            print(self.term.move_y(middle_height) + self.term.white_on_blue, end='')
+            print(f"Contract: {position.contract}")
+            print(f"Net position {position.net_pos}")
+            print(f"Stop: {self.stop}      Take profit: {self.take_profit}")
+            print(f"Opened on signal: {position.state}")
+            for order in position.associated_orders:
+                print(order)
+            print(self.term.normal)
+
+    def display_bottom(self, bottom_height):
+        """
+        Print to bottom section of terminal.
+        Streams messages and events like sent orders or errors.
+        """
+        for message in self.messages:
+            print(message)
+
 def main():
     """Testing the module"""
     term = Terminal()
