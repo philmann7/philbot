@@ -85,17 +85,17 @@ def level_set(
 
         # Or in case the long EMA is very far away:
         if abs(cloud.long_ema - current_price) > abs(current_price -
-                                                     (cloud.short_ema - (direction_mod * 2 * standard_deviation))):
+                                                     (cloud.short_ema - (direction_mod * 2 * standard_deviation * -1))):
             stop = (
                 StopType.EMA_SHORT,
-                (direction_mod * 2 * standard_deviation))
+                (direction_mod * 2 * standard_deviation * -1))
 
         # Or if the long EMA is too close:
         elif abs(cloud.long_ema - current_price) < abs(current_price -
-                                                       (cloud.short_ema - (direction_mod * 0.5 * standard_deviation))):
+                                                       (cloud.short_ema - (direction_mod * 0.5 * standard_deviation * -1))):
             stop = (
                 StopType.EMA_SHORT,
-                (direction_mod * 0.5 * standard_deviation))
+                (direction_mod * 0.5 * standard_deviation * -1))
 
     take_profit = cloud.short_ema + (standard_deviation * take_profit_mod)
 
