@@ -308,11 +308,11 @@ class Position:
                 price > stop_level and cloud_color == CloudColor.RED):
             return self.close(client, account_id)
 
-        if (price > self.take_profit + (standard_deviation * 0.25) and cloud_color == CloudColor.GREEN) or (
-                price < self.take_profit - (standard_deviation * 0.25) and cloud_color == CloudColor.RED):
+        if (price > self.take_profit and cloud_color == CloudColor.GREEN) or (
+                price < self.take_profit and cloud_color == CloudColor.RED):
             self.stop = (self.take_profit, 0)
             self.take_profit += (standard_deviation *
-                                 0.75) if cloud_color == CloudColor.GREEN else (standard_deviation * -0.75)
+                                 0.5) if cloud_color == CloudColor.GREEN else (standard_deviation * -0.5)
             return self.take_profit
 
     def update_from_account_activity(self, message_type, otherdata):
