@@ -101,8 +101,8 @@ async def main():
 
     ordermanager_config = OrderManagerConfig(
         stdev_period=20,
-        mindte=2,
-        maxdte=3,
+        mindte=3,
+        maxdte=4,
         max_contract_price=2.2,
         min_contract_price=0.80,
         max_spread=0.06,
@@ -113,6 +113,7 @@ async def main():
         limit_padding=.01,
         time_btwn_positions=15,
         order_timeout_length=30,
+        min_cloud_width = .03
     )
     ordmngr = OrderManager(ordermanager_config)
     await read_stream(msghandler, signaler, ordmngr, ui)

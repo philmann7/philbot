@@ -125,6 +125,7 @@ class OrderManagerConfig:
         limit_padding,
         time_btwn_positions,  # This and order_timeout_length in seconds.
         order_timeout_length,
+        min_cloud_width,
     ):
         self.stdev_period = (
             stdev_period  # Period of calculation of the standard deviation.
@@ -146,6 +147,7 @@ class OrderManagerConfig:
         self.limit_padding = limit_padding
         self.time_btwn_positions = time_btwn_positions
         self.order_timeout_length = order_timeout_length
+        self.min_cloud_width = min_cloud_width
 
 
 class Position:
@@ -443,9 +445,12 @@ class OrderManager:
         self, symbol, signal, client, cloud, price, account_id,
     ):
         """Opens a position based on a signal."""
+
+        if abs(cloud.short_ema - cloud.long_ema) < self.config.min_cloud_width:
+            return None
+
         standard_dev = get_std_dev_for_symbol(
             client, symbol, self.config.stdev_period)
-
         stop, take_profit = level_set(price, standard_dev, cloud)
         stop_level = StopType.stop_tuple_to_level(stop, cloud)
 
