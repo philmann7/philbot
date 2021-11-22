@@ -44,7 +44,7 @@ class PhilbotUI:
 
         self.display_top(msg_handler, clouds, top_height)
         self.display_middle(positions, middle_height)
-        self.display_bottom(bottom_height, section_height)
+        self.display_bottom(bottom_height,)
 
     def display_top(self, msg_handler, clouds, top_height):
         """
