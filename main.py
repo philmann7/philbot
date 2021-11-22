@@ -101,8 +101,8 @@ async def main():
 
     ordermanager_config = OrderManagerConfig(
         stdev_period=20,
-        mindte=3,
-        maxdte=4,
+        mindte=2,
+        maxdte=3,
         max_contract_price=2.2,
         min_contract_price=0.80,
         max_spread=0.06,
