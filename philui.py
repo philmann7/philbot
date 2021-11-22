@@ -39,8 +39,8 @@ class PhilbotUI:
         """
         Dispatches to class specific display funcs.
         """
+        self.interface_clear()
         top_height, middle_height, bottom_height = self.section_heights
-        section_height = abs(bottom_height - middle_height)
 
         self.display_top(msg_handler, clouds, top_height)
         self.display_middle(positions, middle_height)
@@ -55,7 +55,7 @@ class PhilbotUI:
         for symbol in {"SPY"}:  # To be changed for handling multiple symbols.
             try:
                 last_price = float(msg_handler.last_messages[symbol]["LAST_PRICE"])
-                last_price = f'{last_price:.2f}' 
+                last_price = f'{last_price:.2f}'
             except KeyError:
                 last_price = "..."
             print(self.term.move_y(top_height) + f"{symbol} Last Price: {last_price}")
@@ -82,20 +82,20 @@ class PhilbotUI:
                 print(order)
             print(self.term.normal)
 
-    def display_bottom(self, bottom_height, section_height):
+    def display_bottom(self, bottom_height,):
         """
         Print to bottom section of terminal.
         Streams messages and events like sent orders or errors.
         Add strings to self.messages to display them here.
         """
-        print(self.term.move_y(bottom_height))
+        section_height = abs(self.term.height - bottom_height)
+        print(self.term.move_y(self.term.height-1))
         line_count = 0
         for message in reversed(self.messages):
             message = str(message)
-            lines = list(reversed(wrap(message, width=self.term.width)))
+            lines = reversed(wrap(message, width=self.term.width))
             while lines and line_count < section_height:
-                print(lines.pop(), end='')
-                print(self.term.move_y(-1))
+                print(next(lines) + self.term.move_up, end='')
                 line_count += 1
 
 
