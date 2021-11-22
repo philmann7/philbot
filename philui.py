@@ -89,14 +89,17 @@ class PhilbotUI:
         Add strings to self.messages to display them here.
         """
         section_height = abs(self.term.height - bottom_height)
-        print(self.term.move_y(self.term.height-1))
+        print(self.term.move_y(self.term.height - 3))
         line_count = 0
         for message in reversed(self.messages):
             message = str(message)
             lines = reversed(wrap(message, width=self.term.width))
-            while lines and line_count < section_height:
-                print(next(lines) + self.term.move_up, end='')
-                line_count += 1
+            while line_count < section_height - 5:
+                try:
+                    print(next(lines) + self.term.move_up, end='')
+                    line_count += 1
+                except StopIteration:
+                    break
 
 
 if __name__ == '__main__':
