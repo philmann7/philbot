@@ -185,7 +185,7 @@ class Position:
         self.closed_time = None
 
     def open(
-        self, client, account_id, limit,
+        self, client, account_id, limit, ui
     ):
         """
         For opening a position on the first valid buy signal.
@@ -208,13 +208,14 @@ class Position:
 
         order_id = Utils(client, account_id).extract_order_id(response)
         # Since order_id is potentially None:
+        ui.messages.append(f"Sent opening order for {self.contract}.")
         if not order_id:
             return 0
 
         self.associated_orders[order_id] = "OPEN"
         return order_id
 
-    def close(self, client, account_id):
+    def close(self, client, account_id, ui):
         """
         Cancels any orders not already canceled or filled.
         Sells to close any contracts currently held.
@@ -222,6 +223,7 @@ class Position:
         self.state = Signals.EXIT
         self.closed_time = datetime.now()
 
+        ui.messages.append(f"Closing position {self.contract}.")
         print(f"Closing postion {self.contract}")
         # canceling orders
         for order_id in self.associated_orders:
@@ -230,7 +232,7 @@ class Position:
                 try:
                     client.cancel_order(account_id, order_id)
                 except Exception as e:
-                    print(
+                    ui.messages.append(
                         f"Exception canceling order "
                         f"(id: {order_id}:{self.associated_orders[order_id]}):\n{e}")
         # selling to close out position (important that this is done
@@ -249,6 +251,7 @@ class Position:
                 break
             except Exception as e:
                 print(e)
+                ui.messages.append(e)
                 time.sleep(0.5)
 
         order_id = Utils(client, account_id).extract_order_id(response)
@@ -312,7 +315,7 @@ class Position:
         stop_level = StopType.stop_tuple_to_level(self.stop, cloud)
         if (price < stop_level and cloud_color == CloudColor.GREEN) or (
                 price > stop_level and cloud_color == CloudColor.RED):
-            return self.close(client, account_id)
+            return self.close(client, account_id, ui)
 
         if (price > self.take_profit and cloud_color == CloudColor.GREEN) or (
                 price < self.take_profit and cloud_color == CloudColor.RED):
