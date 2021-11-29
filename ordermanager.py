@@ -176,7 +176,7 @@ class Position:
         # If opened on OPEN_OR_INCREASE only allow position size 1
 
         self.net_pos = 0
-        self.associated_orders = {}  # id:status
+        self.associated_orders = {}  # {id:status} id should be int
 
         self.stop = stop  # (StopType, offset)
         self.take_profit = take_profit
@@ -210,11 +210,12 @@ class Position:
                 time.sleep(0.5)
 
         order_id = Utils(client, account_id).extract_order_id(response)
-        # Since order_id is potentially None:
         ui.messages.append(f"Sent opening order for {self.contract}.")
+        # Since order_id is potentially None:
         if not order_id:
             return 0
 
+        order_id = int(order_id)
         self.associated_orders[order_id] = "OPEN"
         return order_id
 
@@ -261,6 +262,7 @@ class Position:
         # order_id is potentially None
         if not order_id:
             return 0
+        order_id = int(order_id)
         self.associated_orders[order_id] = "SELL_TO_CLOSE"
         return order_id
 
@@ -295,6 +297,7 @@ class Position:
         # order_id is potentially None
         if not order_id:
             return 0
+        order_id = int(order_id)
         self.associated_orders[order_id] = "OPEN"
         return order_id
 
@@ -334,7 +337,7 @@ class Position:
         otherdata argument should be the output of the XML data parser.
         """
         ui.messages.append(f"{message_type} message for {self.contract}.")
-        self.associated_orders[otherdata["OrderKey"]] = message_type
+        self.associated_orders[int(otherdata["OrderKey"])] = message_type
         match message_type:
             case "OrderFill":
                 original_quantity = int(otherdata["OriginalQuantity"])
