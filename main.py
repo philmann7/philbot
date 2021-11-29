@@ -99,22 +99,9 @@ async def main():
     longEMALength = 21
     signaler = Signaler(client, "SPY", shortEMALength, longEMALength)
 
-    ordermanager_config = OrderManagerConfig(
-        stdev_period=20,
-        mindte=2,
-        maxdte=3,
-        max_contract_price=2.2,
-        min_contract_price=0.80,
-        max_spread=0.06,
-        max_loss=.20,
-        min_loss=.10,
-        min_risk_reward_ratio=2.0,
-        strike_count=5,
-        limit_padding=.01,
-        time_btwn_positions=15,
-        order_timeout_length=30,
-        min_cloud_width = .03
-    )
+    with open("config.json") as config_file:
+        config_dict = json.load(config_file)
+    ordermanager_config = OrderManagerConfig(**config_dict)
     ordmngr = OrderManager(ordermanager_config)
     await read_stream(msghandler, signaler, ordmngr, ui)
 
