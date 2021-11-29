@@ -185,7 +185,7 @@ class Position:
         self.closed_time = None
 
     def __str__(self):
-        return f"{self.contract}: Net position: {net_pos}."
+        return f"{self.contract}: Net position: {self.net_pos}."
 
     def open(
         self, client, account_id, limit, ui

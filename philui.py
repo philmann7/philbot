@@ -80,7 +80,7 @@ class PhilbotUI:
             print(f"Opened on signal: {position.state}")
             for order in position.associated_orders:
                 print(order)
-            print(self.term.normal)
+            print(self.term.normal, end='')
 
     def display_bottom(self, bottom_height,):
         """
@@ -89,14 +89,15 @@ class PhilbotUI:
         Add strings to self.messages to display them here.
         """
         section_height = abs(self.term.height - bottom_height)
-        print(self.term.move_y(self.term.height - 3))
+        print(self.term.move_y(self.term.height), end='')
         line_count = 0
         for message in reversed(self.messages):
             message = str(message)
             lines = reversed(wrap(message, width=self.term.width))
-            while line_count < section_height - 5:
+            while line_count < section_height - 3:
                 try:
-                    print(next(lines) + self.term.move_up, end='')
+                    print(next(lines), end='')
+                    print(self.term.move_up, end='')
                     line_count += 1
                 except StopIteration:
                     break
