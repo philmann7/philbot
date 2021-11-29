@@ -192,6 +192,6 @@ class Signaler:
         if status_update:
             old_status, new_status = status_update
             signal = self.cloud_status_to_signal(old_status, new_status)
-            ui.messages.append(f"New Signal for {self.symbol: {signal}")
+            ui.messages.append(f"New Signal for {self.symbol}: {signal}")
             return signal, new_price
         return 0, new_price
