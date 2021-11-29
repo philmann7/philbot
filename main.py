@@ -40,7 +40,7 @@ def message_handling(msg, signaler, msghandler, ordmngr, ui):
 
     if newdatafor and newdatafor[0][1] == "ACCT_ACTIVITY":
         return [
-            ordmngr.update_from_account_activity(symbol, msg_type, msg_data)
+            ordmngr.update_from_account_activity(symbol, msg_type, msg_data, ui)
             for ((symbol, msg_type, msg_data), service) in newdatafor
         ]
 
@@ -48,14 +48,14 @@ def message_handling(msg, signaler, msghandler, ordmngr, ui):
     # so multiple symbols will break this
     updates = [
         (symbol, signaler.update(
-            service, msghandler.last_messages[symbol],))
+            service, msghandler.last_messages[symbol], ui))
         for (symbol, service) in newdatafor
         # for signaler in signalers if signaler.symbol == symbol
     ]
     ordermngupdate = [
         ordmngr.update_from_quote(
             client, int(
-                os.getenv("account_number")), signaler.cloud, symbol, signal, newprice)
+                os.getenv("account_number")), signaler.cloud, symbol, signal, newprice, ui)
         for (symbol, (signal, newprice)) in updates
     ]
     ui.interface_clear()

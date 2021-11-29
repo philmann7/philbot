@@ -259,13 +259,15 @@ class Position:
         return order_id
 
     def increase(
-        self, client, account_id,
+        self, client, account_id, ui,
     ):
         """ Adds to the position """
         self.state = Signals.OPEN_OR_INCREASE
 
         # Don't increase if there are open orders.
         if "OPEN" in self.associated_orders.values():
+            ui.messages.append(
+                f"Attempted to increase for {self.contract}, but there's already an open order.")
             return 0
 
         while True:
@@ -279,8 +281,10 @@ class Position:
                 break
             except Exception as e:
                 print(e)
+                ui.messages.append(e)
                 time.sleep(0.5)
 
+        ui.messages.append(f"Sent increase order for {self.contract}.")
         order_id = Utils(client, account_id).extract_order_id(response)
         # order_id is potentially None
         if not order_id:
@@ -289,7 +293,7 @@ class Position:
         return order_id
 
     def update_position_from_quote(
-            self, cloud, signal, price, standard_deviation, client, account_id):
+            self, cloud, signal, price, standard_deviation, client, account_id, ui):
         """
         Handles stop loss, take profit and adding to a position.
         Opening a position and closing for other reasons
@@ -301,7 +305,7 @@ class Position:
             return Signals.EXIT
 
         if signal == Signals.OPEN_OR_INCREASE and self.state == Signals.OPEN:
-            return self.increase(client, account_id)
+            return self.increase(client, account_id, ui)
 
         cloud_color = cloud.status[0]
 
@@ -315,13 +319,15 @@ class Position:
             self.stop = (self.take_profit, 0)
             self.take_profit += (standard_deviation *
                                  0.5) if cloud_color == CloudColor.GREEN else (standard_deviation * -0.5)
+            ui.messages.append(f"Moved levels into profit for {self.contract}.")
             return self.take_profit
 
-    def update_from_account_activity(self, message_type, otherdata):
+    def update_from_account_activity(self, message_type, otherdata, ui):
         """
         Handles order status updates like order fills or UROUT messages.
         otherdata argument should be the output of the XML data parser.
         """
+        ui.messages.append(f"{message_type} message for {self.contract}.")
         self.associated_orders[otherdata["OrderKey"]] = message_type
         match message_type:
             case "OrderFill":
@@ -356,20 +362,20 @@ class OrderManager:
         self.current_positions = {}  # symbol:Position
 
     def update_from_quote(self, client, account_id, cloud,
-                        symbol, signal, newprice):
+                        symbol, signal, newprice, ui):
         """ Updates a position based on a new price quote. """
         # Garbage collection: removing old position objects to make room for new orders.
         if symbol in self.current_positions and self.current_positions[symbol].closed_time:
             now = datetime.now()
             if timedelta.total_seconds(
                     now - self.current_positions[symbol].closed_time) > self.config.time_btwn_positions:
-                self.current_positions.pop(symbol)
+                ui.messages.append(self.current_positions.pop(symbol))
             # Leave if there is a recently closed position.
             else:
                 return 0
 
         if signal in (Signals.CLOSE, Signals.EXIT) and symbol in self.current_positions:
-            self.current_positions[symbol].close(client, account_id)
+            self.current_positions[symbol].close(client, account_id, ui)
 
         elif symbol in self.current_positions:
             self.current_positions[symbol].check_timeouts(
@@ -377,20 +383,20 @@ class OrderManager:
             standard_deviation = get_std_dev_for_symbol(
                 client, symbol, self.config.stdev_period)
             self.current_positions[symbol].update_position_from_quote(
-                cloud, signal, newprice, standard_deviation, client, account_id)
+                cloud, signal, newprice, standard_deviation, client, account_id, ui)
 
         elif signal and signal not in (Signals.CLOSE, Signals.EXIT):
             self.open_position_from_signal(
-                symbol, signal, client, cloud, newprice, account_id,
+                symbol, signal, client, cloud, newprice, account_id, ui,
             )
 
-    def update_from_account_activity(self, symbol, message_type, data):
+    def update_from_account_activity(self, symbol, message_type, data, ui):
         """
         Handles new messages from the account activity stream,
         like order fills or cancels.
         """
         self.current_positions[symbol].update_from_account_activity(
-            message_type, data)
+            message_type, data, ui)
 
     def get_contract_from_chain(
         self, client, symbol, take_profit, stop, current_price, cloud_color
@@ -442,26 +448,30 @@ class OrderManager:
             return contracts  # None
 
     def open_position_from_signal(
-        self, symbol, signal, client, cloud, price, account_id,
+        self, symbol, signal, client, cloud, price, account_id, ui,
     ):
         """Opens a position based on a signal."""
 
         if abs(cloud.short_ema - cloud.long_ema) < self.config.min_cloud_width:
+            ui.messages.append(f"Tried to open position for {symbol} but cloud witdth too small.")
             return None
 
         standard_dev = get_std_dev_for_symbol(
             client, symbol, self.config.stdev_period)
         stop, take_profit = level_set(price, standard_dev, cloud)
         stop_level = StopType.stop_tuple_to_level(stop, cloud)
+        ui.messages.append(
+            f"Calculated levels for {symbol}...\nTake profit = {take_profit}\nStop level: {stop_level}")
 
         contract = self.get_contract_from_chain(
             client, symbol, take_profit, stop_level, price, cloud.status[0],
         )
         if not contract:
+            ui.messages.append(f"No valid contracts for {symbol}.")
             return None
         limit = contract["ask"] + self.config.limit_padding
 
         self.current_positions[symbol] = Position(
             contract["symbol"], take_profit, stop, signal
         )
-        self.current_positions[symbol].open(client, account_id, limit)
+        self.current_positions[symbol].open(client, account_id, limit, ui)

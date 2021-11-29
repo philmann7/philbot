@@ -154,7 +154,7 @@ class Signaler:
         # In case of confusion.
         return 0
 
-    def update(self, service, data,):
+    def update(self, service, data, ui):
         """
         Updates cloud and outputs signal if any (0 if none), and new_price.
         Wraps the other functions of this clss in the appropriate logic.
@@ -191,5 +191,7 @@ class Signaler:
         status_update = self.update_cloud(new_price)
         if status_update:
             old_status, new_status = status_update
-            return self.cloud_status_to_signal(old_status, new_status), new_price
+            signal = self.cloud_status_to_signal(old_status, new_status)
+            ui.messages.append(f"New Signal for {self.symbol: {signal}")
+            return signal, new_price
         return 0, new_price
