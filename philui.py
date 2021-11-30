@@ -95,9 +95,8 @@ class PhilbotUI:
             message = str(message)
             lines = wrap(message, width=self.term.width)
             while lines and line_count < section_height - 2:
-                for line in lines:
-                    print(line)
-                    line_count += 1
+                print(lines.pop(0))
+                line_count += 1
 
 
 if __name__ == '__main__':
