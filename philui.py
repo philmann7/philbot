@@ -80,7 +80,7 @@ class PhilbotUI:
             print(f"Opened on signal: {position.state}")
             for order in position.associated_orders:
                 print(order)
-        print(self.term.normal)
+        print(self.term.normal, end='')
 
     def display_bottom(self, bottom_height,):
         """
