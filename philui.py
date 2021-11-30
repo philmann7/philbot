@@ -72,15 +72,15 @@ class PhilbotUI:
         Print to the middle section of the terminal.
         Prints position information.
         """
+        print(self.term.move_y(middle_height) + self.term.white_on_blue, end='')
         for position in positions:
-            print(self.term.move_y(middle_height) + self.term.white_on_blue, end='')
             print(f"Contract: {position.contract}")
             print(f"Net position {position.net_pos}")
             print(f"Stop: {position.stop}      Take profit: {position.take_profit:.2f}")
             print(f"Opened on signal: {position.state}")
             for order in position.associated_orders:
                 print(order)
-            print(self.term.normal, end='')
+        print(self.term.normal)
 
     def display_bottom(self, bottom_height,):
         """
@@ -88,19 +88,16 @@ class PhilbotUI:
         Streams messages and events like sent orders or errors.
         Add strings to self.messages to display them here.
         """
-        section_height = abs(self.term.height - bottom_height)
-        print(self.term.move_y(self.term.height), end='')
+        section_height = bottom_height / 2
+        print(self.term.move_y(bottom_height), end='')
         line_count = 0
         for message in reversed(self.messages):
             message = str(message)
-            lines = reversed(wrap(message, width=self.term.width))
-            while line_count < section_height - 3:
-                try:
-                    print(next(lines), end='')
-                    print(self.term.move_up, end='')
+            lines = wrap(message, width=self.term.width)
+            while lines and line_count < section_height - 2:
+                for line in lines:
+                    print(line)
                     line_count += 1
-                except StopIteration:
-                    break
 
 
 if __name__ == '__main__':
