@@ -95,13 +95,16 @@ async def main():
     ui = PhilbotUI(term)
     msghandler = MessageHandler()
 
-    shortEMALength = 9
-    longEMALength = 21
-    signaler = Signaler(client, "SPY", shortEMALength, longEMALength)
 
     with open("config.json") as config_file:
-        config_dict = json.load(config_file)
-    ordermanager_config = OrderManagerConfig(**config_dict)
+        config_json = json.load(config_file)
+
+    ordermanager_configs = config_json['ordermanager']
+    short_ema_length = config_json['short_ema']
+    long_ema_length = config_json['long_ema']
+
+    signaler = Signaler(client, "SPY", short_ema_length, long_ema_length)
+    ordermanager_config = OrderManagerConfig(**ordermanager_configs)
     ordmngr = OrderManager(ordermanager_config)
     await read_stream(msghandler, signaler, ordmngr, ui)
 
