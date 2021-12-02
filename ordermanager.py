@@ -101,7 +101,7 @@ def level_set(
 
     risk_loss = abs(current_price - StopType.stop_tuple_to_level(stop, cloud))
     # Enforce 2.5:1 reward:risk if take_profit is very far away.
-    if abs(current_price - take_profit) > 3 * risk_loss:
+    if abs(current_price - take_profit) > 2.5 * risk_loss:
         take_profit = current_price + (direction_mod * 2.5 * risk_loss)
 
     return stop, take_profit
@@ -325,7 +325,8 @@ class Position:
 
         if (price > self.take_profit and cloud_color == CloudColor.GREEN) or (
                 price < self.take_profit and cloud_color == CloudColor.RED):
-            self.stop = (self.take_profit, 0)
+            offset = standard_deviation * -0.1 if cloud_color == CloudColor.GREEN else standard_deviation * 0.1
+            self.stop = (self.take_profit, offset)
             self.take_profit += (standard_deviation *
                                  0.5) if cloud_color == CloudColor.GREEN else (standard_deviation * -0.5)
             ui.messages.append(f"Moved levels into profit for {self.contract}.")
