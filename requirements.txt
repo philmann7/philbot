@@ -1,2 +1,3 @@
 python-dotenv>=0.19.1
 tda-api>=1.3.7
+blessed>=1.19.0

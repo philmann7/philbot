@@ -66,7 +66,7 @@ def level_set(
 
     # These modifiers are in number of standard deviations.
     stop_mod = 1
-    take_profit_mod = 2
+    take_profit_mod = 1.1
 
     direction_mod = 1
     if cloud_color == CloudColor.RED:
@@ -100,9 +100,9 @@ def level_set(
     take_profit = cloud.short_ema + (standard_deviation * take_profit_mod)
 
     risk_loss = abs(current_price - StopType.stop_tuple_to_level(stop, cloud))
-    # Enforce 2.5:1 reward:risk if take_profit is very far away.
-    if abs(current_price - take_profit) > 2.5 * risk_loss:
-        take_profit = current_price + (direction_mod * 2.5 * risk_loss)
+    # Enforce 2.25:1 reward:risk if take_profit is very far away.
+    if abs(current_price - take_profit) > 2.25 * risk_loss:
+        take_profit = current_price + (direction_mod * 2.25 * risk_loss)
 
     return stop, take_profit
 
@@ -301,6 +301,9 @@ class Position:
         self.associated_orders[order_id] = "OPEN"
         return order_id
 
+    def move_stop_on_increase(self):
+        pass
+
     def update_position_from_quote(
             self, cloud, signal, price, standard_deviation, client, account_id, ui):
         """
@@ -323,12 +326,12 @@ class Position:
                 price > stop_level and cloud_color == CloudColor.RED):
             return self.close(client, account_id, ui)
 
-        if (price > self.take_profit and cloud_color == CloudColor.GREEN) or (
-                price < self.take_profit and cloud_color == CloudColor.RED):
-            offset = standard_deviation * -0.1 if cloud_color == CloudColor.GREEN else standard_deviation * 0.1
+        if (price >= self.take_profit and cloud_color == CloudColor.GREEN) or (
+                price <= self.take_profit and cloud_color == CloudColor.RED):
+            offset = standard_deviation * -0.2 if cloud_color == CloudColor.GREEN else standard_deviation * 0.2
             self.stop = (self.take_profit, offset)
             self.take_profit += (standard_deviation *
-                                 0.5) if cloud_color == CloudColor.GREEN else (standard_deviation * -0.5)
+                                 0.2) if cloud_color == CloudColor.GREEN else (standard_deviation * -0.2)
             ui.messages.append(f"Moved levels into profit for {self.contract}.")
             return self.take_profit
 
