@@ -65,6 +65,7 @@ class Signaler:
         self.symbol = symbol
         self.cloud = Cloud(short_ema, long_ema, currentprice)
 
+        self.timeframe_minutes = timeframe_minutes
         self.candle_counter = 0
 
     def update_cloud(self, new_price):
@@ -186,7 +187,7 @@ class Signaler:
                 return 0, None
 
             self.candle_counter += 1
-            if self.candle_counter < timeframe_minutes:
+            if self.candle_counter < self.timeframe_minutes:
                 return 0, None
 
             self.candle_counter = 0
