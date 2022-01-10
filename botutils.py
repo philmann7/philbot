@@ -33,20 +33,14 @@ def get_history(client, symbol):
     return history["candles"]
 
 
-def get_std_dev(candles, period, values="close"):
+def get_std_dev_for_symbol(client, symbol, period, time_period=1):
     """
-    Returns standard deviation of the period.
-    Takes input of get_history.
-    Uses close vals by default.
+    Returns standard deviation of given symbol on period.
+    Only uses close values of candles.
+    time_period: timeframe of the candles in minutes.
     """
-    return stdev([candle[values] for candle in candles[-period:]])
-
-
-def get_std_dev_for_symbol(client, symbol, period):
-    """Convenience func to combine get_std_dev and get_history."""
-    history = get_history(client, symbol)
-    standard_deviation = get_std_dev(history, period)
-    return standard_deviation
+    candles = get_history(client, symbol)[time_period-1::time_period]
+    return stdev([candle['close'] for candle in candles[-period:]])
 
 
 def get_option_chain(
