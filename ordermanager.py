@@ -126,6 +126,7 @@ class OrderManagerConfig:
         time_btwn_positions,  # This and order_timeout_length in seconds.
         order_timeout_length,
         min_cloud_width,
+        timeframe_minutes,
     ):
         self.stdev_period = (
             stdev_period  # Period of calculation of the standard deviation.
@@ -148,6 +149,7 @@ class OrderManagerConfig:
         self.time_btwn_positions = time_btwn_positions
         self.order_timeout_length = order_timeout_length
         self.min_cloud_width = min_cloud_width
+        self.timeframe_minutes = timeframe_minutes
 
 
 class Position:
