@@ -32,6 +32,7 @@ class Signaler:
         symbol,
         short_ema_length,
         long_ema_length,
+        timeframe_minutes,
     ):
         """
         Fields:
@@ -41,8 +42,9 @@ class Signaler:
         first_chart_equity
         symbol
         cloud
+        timeframe_minutes
         """
-        history = get_history(client, symbol)
+        history = get_history(client, symbol)[timeframe_minutes-1::timeframe_minutes]
         closevals = [candle["close"] for candle in history]
 
         self.short_ema_length = short_ema_length
@@ -62,6 +64,8 @@ class Signaler:
 
         self.symbol = symbol
         self.cloud = Cloud(short_ema, long_ema, currentprice)
+
+        self.candle_counter = 0
 
     def update_cloud(self, new_price):
         """
@@ -180,6 +184,12 @@ class Signaler:
             if self.first_chart_equity:
                 self.first_chart_equity = False
                 return 0, None
+
+            candle_counter += 1
+            if candle_counter < timeframe_minutes:
+                return 0, None
+
+            candle_counter = 0
 
             close_price = data["CLOSE_PRICE"]
             self.historical["short"] = exp_mov_avg(
