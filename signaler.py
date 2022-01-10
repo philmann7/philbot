@@ -185,11 +185,11 @@ class Signaler:
                 self.first_chart_equity = False
                 return 0, None
 
-            candle_counter += 1
-            if candle_counter < timeframe_minutes:
+            self.candle_counter += 1
+            if self.candle_counter < timeframe_minutes:
                 return 0, None
 
-            candle_counter = 0
+            self.candle_counter = 0
 
             close_price = data["CLOSE_PRICE"]
             self.historical["short"] = exp_mov_avg(
