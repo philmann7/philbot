@@ -103,7 +103,9 @@ async def main():
     short_ema_length = config_json['short_ema']
     long_ema_length = config_json['long_ema']
 
-    signaler = Signaler(client, "SPY", short_ema_length, long_ema_length)
+    timeframe_minutes = ordermanager_configs['timeframe_minutes']
+
+    signaler = Signaler(client, "SPY", short_ema_length, long_ema_length, timeframe_minutes)
     ordermanager_config = OrderManagerConfig(**ordermanager_configs)
     ordmngr = OrderManager(ordermanager_config)
     await read_stream(msghandler, signaler, ordmngr, ui)

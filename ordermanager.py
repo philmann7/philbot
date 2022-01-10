@@ -394,7 +394,7 @@ class OrderManager:
             self.current_positions[symbol].check_timeouts(
                 client, account_id, self.config.order_timeout_length)
             standard_deviation = get_std_dev_for_symbol(
-                client, symbol, self.config.stdev_period)
+                client, symbol, self.config.stdev_period, self.config.timeframe_minutes)
             self.current_positions[symbol].update_position_from_quote(
                 cloud, signal, newprice, standard_deviation, client, account_id, ui)
 
@@ -470,7 +470,7 @@ class OrderManager:
             return None
 
         standard_dev = get_std_dev_for_symbol(
-            client, symbol, self.config.stdev_period)
+            client, symbol, self.config.stdev_period, self.config.timeframe_minutes)
         stop, take_profit = level_set(price, standard_dev, cloud)
         stop_level = StopType.stop_tuple_to_level(stop, cloud)
         ui.messages.append(
