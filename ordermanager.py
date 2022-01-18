@@ -50,7 +50,7 @@ class StopType(Enum):
 
 
 def level_set(
-    current_price, standard_deviation, cloud,
+    current_price, standard_deviation, cloud, stop_mod, take_profit_mod,
 ):
     """
     Calculates risk and reward levels.
@@ -63,10 +63,6 @@ def level_set(
     take_profit = None
     cloud_color = cloud.status[0]
     cloud_location = cloud.status[1]
-
-    # These modifiers are in number of standard deviations.
-    stop_mod = 1
-    take_profit_mod = 1.1
 
     direction_mod = 1
     if cloud_color == CloudColor.RED:
@@ -127,6 +123,8 @@ class OrderManagerConfig:
         order_timeout_length,
         min_cloud_width,
         timeframe_minutes,
+        stop_mod,
+        take_profit_mod,
     ):
         self.stdev_period = (
             stdev_period  # Period of calculation of the standard deviation.
@@ -150,6 +148,10 @@ class OrderManagerConfig:
         self.order_timeout_length = order_timeout_length
         self.min_cloud_width = min_cloud_width
         self.timeframe_minutes = timeframe_minutes
+
+        # The following two are measured in standard deviations.
+        self.stop_mod = stop_mod
+        self.take_profit_mod = take_profit_mod
 
 
 class Position:
@@ -473,7 +475,8 @@ class OrderManager:
 
         standard_dev = get_std_dev_for_symbol(
             client, symbol, self.config.stdev_period, self.config.timeframe_minutes)
-        stop, take_profit = level_set(price, standard_dev, cloud)
+        stop, take_profit = level_set(
+            price, standard_dev, cloud, self.config.stop_mod, self.config.take_profit_mod)
         stop_level = StopType.stop_tuple_to_level(stop, cloud)
         ui.messages.append(
             f"Calculated levels for {symbol}...\nTake profit = {take_profit}\nStop level: {stop_level}")
