@@ -273,7 +273,9 @@ class Position:
     def increase(
         self, client, account_id, ui,
     ):
-        """ Adds to the position """
+        """
+        Adds to the position.
+        """
         self.state = Signals.OPEN_OR_INCREASE
 
         # Don't increase if there are open orders.
@@ -298,6 +300,8 @@ class Position:
 
         ui.messages.append(f"Sent increase order for {self.contract}.")
         order_id = Utils(client, account_id).extract_order_id(response)
+        self.move_stop_on_increase()
+
         # order_id is potentially None
         if not order_id:
             return 0
@@ -306,7 +310,12 @@ class Position:
         return order_id
 
     def move_stop_on_increase(self):
-        pass
+        """
+        Trims existing stop loss.
+        """
+        (stop_type, offset) = self.stop
+        offset = offset / 2
+        self.stop = (stop_type, offset)
 
     def update_position_from_quote(
             self, cloud, signal, price, standard_deviation, client, account_id, ui):
