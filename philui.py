@@ -77,7 +77,7 @@ class PhilbotUI:
             print(f"Contract: {position.contract}")
             print(f"Net position {position.net_pos}")
             print(f"Stop: {position.stop}      Take profit: {position.take_profit:.2f}")
-            print(f"Opened on signal: {position.state}")
+            print(f"Last signal: {position.state}")
             for order in position.associated_orders:
                 print(order)
         print(self.term.normal, end='')
