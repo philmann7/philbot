@@ -125,6 +125,8 @@ class OrderManagerConfig:
         timeframe_minutes,
         stop_mod,
         take_profit_mod,
+        trail_stop_mod,
+        profit_step_mod,
     ):
         self.stdev_period = (
             stdev_period  # Period of calculation of the standard deviation.
@@ -152,6 +154,10 @@ class OrderManagerConfig:
         # The following two are measured in standard deviations.
         self.stop_mod = stop_mod
         self.take_profit_mod = take_profit_mod
+
+
+        self.trail_stop_mod = trail_stop_mod
+        self.profit_step_mod = profit_step_mod
 
 
 class Position:
