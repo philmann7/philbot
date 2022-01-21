@@ -318,7 +318,8 @@ class Position:
         self.stop = (stop_type, offset)
 
     def update_position_from_quote(
-            self, cloud, signal, price, standard_deviation, client, account_id, ui):
+            self, cloud, signal, price, standard_deviation, trail_stop_mod, profit_step_mod, client, account_id, ui
+    ):
         """
         Handles stop loss, take profit and adding to a position.
         Opening a position and closing for other reasons
@@ -341,10 +342,11 @@ class Position:
 
         if (price >= self.take_profit and cloud_color == CloudColor.GREEN) or (
                 price <= self.take_profit and cloud_color == CloudColor.RED):
-            offset = standard_deviation * -0.2 if cloud_color == CloudColor.GREEN else standard_deviation * 0.2
+            offset = (standard_deviation * -1 * trail_stop_mod
+                ) if cloud_color == CloudColor.GREEN else standard_deviation * trail_stop_mod
             self.stop = (self.take_profit, offset)
-            self.take_profit += (standard_deviation *
-                                 0.2) if cloud_color == CloudColor.GREEN else (standard_deviation * -0.2)
+            self.take_profit += (standard_deviation * profit_step_mod
+                ) if cloud_color == CloudColor.GREEN else (standard_deviation * -1 * profit_step_mod)
             ui.messages.append(f"Moved levels into profit for {self.contract}.")
             return self.take_profit
 
@@ -409,7 +411,10 @@ class OrderManager:
             standard_deviation = get_std_dev_for_symbol(
                 client, symbol, self.config.stdev_period, self.config.timeframe_minutes)
             self.current_positions[symbol].update_position_from_quote(
-                cloud, signal, newprice, standard_deviation, client, account_id, ui)
+                cloud, signal, price, standard_deviation,
+                self.config.trail_stop_mod, self.config.profit_step_mod,
+                client, account_id, ui
+            )
 
         elif signal and signal not in (Signals.CLOSE, Signals.EXIT):
             self.open_position_from_signal(

@@ -16,7 +16,9 @@
         "min_cloud_width":0.06,
         "timeframe_minutes":5,
         "stop_mod":0.7,
-        "take_profit_mod":0.8
+        "take_profit_mod":0.8,
+        "trail_stop_mod":0.2,
+        "profit_step_mod":0.2
     },
     "short_ema":5,
     "long_ema":13
