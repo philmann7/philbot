@@ -96,9 +96,10 @@ def level_set(
     take_profit = cloud.short_ema + (standard_deviation * take_profit_mod)
 
     risk_loss = abs(current_price - StopType.stop_tuple_to_level(stop, cloud))
-    # Enforce 2.25:1 reward:risk if take_profit is very far away.
-    if abs(current_price - take_profit) > 2.25 * risk_loss:
-        take_profit = current_price + (direction_mod * 2.25 * risk_loss)
+    # Enforce max_ratio:1 reward:risk if take_profit is very far away.
+    max_ratio = 1.5
+    if abs(current_price - take_profit) > max_ratio * risk_loss:
+        take_profit = current_price + (direction_mod * max_ratio * risk_loss)
 
     return stop, take_profit
 
