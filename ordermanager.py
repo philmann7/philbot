@@ -417,7 +417,7 @@ class OrderManager:
             standard_deviation = get_std_dev_for_symbol(
                 client, symbol, self.config.stdev_period, self.config.timeframe_minutes)
             self.current_positions[symbol].update_position_from_quote(
-                cloud, signal, price, standard_deviation,
+                cloud, signal, newprice, standard_deviation,
                 self.config.trail_stop_mod, self.config.profit_step_mod,
                 client, account_id, ui
             )
