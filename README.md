@@ -1,5 +1,5 @@
 # philbot
-## Not yet usable or tested.
+## Trade at your own risk.
 ## A bot which implements a strategy using exponential moving averages and options contracts.
 This code makes heavy use of [tda-api](https://github.com/alexgolec/tda-api). Thanks to author Alex Golec and other contributors.
 
