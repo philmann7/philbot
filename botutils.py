@@ -59,7 +59,7 @@ def get_avg_range_for_symbol(client, symbol, period, time_period=1):
             i += chunk_size
         return chunked
 
-    candles_grouped = chunked(candles, time_period)
+    candles_grouped = chunk_list(candles, time_period)
     ranges = [
         max([candle['high'] for candle in chunk]) - min([candle['low'] for candle in chunk])
         for chunk in candles_grouped
