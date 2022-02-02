@@ -103,7 +103,7 @@ def level_set(
     if potential_profit > max_ratio * risk_loss:
         take_profit = current_price + (direction_mod * max_ratio * risk_loss)
     if potential_profit < max_ratio * risk_loss:
-        stop = (current_price, potential_profit * direction_mod * -1)
+        stop = (current_price, potential_profit * direction_mod * -.95)
 
     return stop, take_profit
 
