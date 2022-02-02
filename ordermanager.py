@@ -98,8 +98,12 @@ def level_set(
     risk_loss = abs(current_price - StopType.stop_tuple_to_level(stop, cloud))
     # Enforce max_ratio:1 reward:risk if take_profit is very far away.
     max_ratio = 1.5
-    if abs(current_price - take_profit) > max_ratio * risk_loss:
+    min_ratio = 1.0
+    potential_profit = abs(current_price - take_profit)
+    if potential_profit > max_ratio * risk_loss:
         take_profit = current_price + (direction_mod * max_ratio * risk_loss)
+    if potential_profit < max_ratio * risk_loss:
+        stop = (current_price, potential_profit * direction_mod * -1)
 
     return stop, take_profit
 
