@@ -14,7 +14,7 @@ from tda.utils import Utils
 
 from signaler import Signals
 from ema import CloudColor, CloudPriceLocation
-from botutils import get_std_dev_for_symbol, get_flattened_chain
+from botutils import get_avg_range_for_symbol, get_flattened_chain
 
 
 class StopType(Enum):
@@ -415,10 +415,10 @@ class OrderManager:
         elif symbol in self.current_positions:
             self.current_positions[symbol].check_timeouts(
                 client, account_id, self.config.order_timeout_length)
-            standard_deviation = get_std_dev_for_symbol(
+            average_range = get_avg_range_for_symbol(
                 client, symbol, self.config.stdev_period, self.config.timeframe_minutes)
             self.current_positions[symbol].update_position_from_quote(
-                cloud, signal, newprice, standard_deviation,
+                cloud, signal, newprice, average_range,
                 self.config.trail_stop_mod, self.config.profit_step_mod,
                 client, account_id, ui
             )
@@ -494,10 +494,10 @@ class OrderManager:
             ui.messages.append(f"Tried to open position for {symbol} but cloud witdth too small.")
             return None
 
-        standard_dev = get_std_dev_for_symbol(
+        average_range = get_avg_range_for_symbol
             client, symbol, self.config.stdev_period, self.config.timeframe_minutes)
         stop, take_profit = level_set(
-            price, standard_dev, cloud, self.config.stop_mod, self.config.take_profit_mod)
+            price, average_range, cloud, self.config.stop_mod, self.config.take_profit_mod)
         stop_level = StopType.stop_tuple_to_level(stop, cloud)
         ui.messages.append(
             f"Calculated levels for {symbol}...\nTake profit = {take_profit}\nStop level: {stop_level}")
