@@ -498,7 +498,7 @@ class OrderManager:
             ui.messages.append(f"Tried to open position for {symbol} but cloud witdth too small.")
             return None
 
-        average_range = get_avg_range_for_symbol
+        average_range = get_avg_range_for_symbol(
             client, symbol, self.config.stdev_period, self.config.timeframe_minutes)
         stop, take_profit = level_set(
             price, average_range, cloud, self.config.stop_mod, self.config.take_profit_mod)
