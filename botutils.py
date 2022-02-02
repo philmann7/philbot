@@ -1,6 +1,6 @@
 """Utility functions and classes used in philbot."""
 
-from statistics import stdev
+from statistics import stdev, mean
 import datetime
 import re
 import time
@@ -41,6 +41,17 @@ def get_std_dev_for_symbol(client, symbol, period, time_period=1):
     """
     candles = get_history(client, symbol)[time_period-1::time_period]
     return stdev([candle['close'] for candle in candles[-period:]])
+
+
+def get_avg_range_for_symbol(client, symbol, period, time_period=1):
+    """
+    Returns average range of given symbol on given period.
+    Range is the high-low of each candle.
+    time_period: timeframe of the candles in minutes.
+    """
+    candles = get_history(client, symbol)[time_period-1::time_period]
+    return mean(
+        [ (candle['high'] - candle['low']) for candle in candles[-period:]])
 
 
 def get_option_chain(
