@@ -49,9 +49,22 @@ def get_avg_range_for_symbol(client, symbol, period, time_period=1):
     Range is the high-low of each candle.
     time_period: timeframe of the candles in minutes.
     """
-    candles = get_history(client, symbol)[time_period-1::time_period]
-    return mean(
-        [ (candle['high'] - candle['low']) for candle in candles[-period:]])
+    candles = get_history(client, symbol)
+
+    def chunk_list(candles, chunk_size):
+        i = 0
+        chunked = []
+        while i < len(candles):
+            chunked.append(candles[i:i+chunk_size])
+            i += chunk_size
+        return chunked
+
+    candles_grouped = chunked(candles, time_period)
+    ranges = [
+        max([candle['high'] for candle in chunk]) - min([candle['low'] for candle in chunk])
+        for chunk in candles_grouped
+        ]
+    return mean(ranges)
 
 
 def get_option_chain(
